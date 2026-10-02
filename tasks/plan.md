@@ -1,7 +1,7 @@
 # deeKub — Implementation Plan
 
-วันที่: 2026-10-02
-สถานะ: Phase 1 เริ่มแล้ว — README/แผนและ Go API `/health` foundation อยู่บน branch `feature/deekub-web-mvp`; Web Store, CMS, PostgreSQL และ auth ยังไม่เริ่ม
+วันที่: 2026-10-03
+สถานะ: Phase 1 เริ่มแล้ว — Go API `/health` และ Web Store/CMS demo shell อยู่บน branch `feature/deekub-web-mvp`; PostgreSQL, auth, API integration และ flow ซื้อขายยังไม่เริ่ม
 
 ## Overview
 

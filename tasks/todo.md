@@ -1,15 +1,15 @@
 # deeKub — Task Breakdown
 
 Phase 1 is Web Store + CMS only. Tauri Desktop and React Native Mobile are Phase 2; see plan.md.
-Status: Go API `/health` foundation is implemented on `feature/deekub-web-mvp`; all remaining rows are planned until checked below.
+Status: Go API `/health` and the demo storefront/CMS shell are implemented on `feature/deekub-web-mvp`. Database, auth, live catalog and transactions remain planned.
 
 | # | Task | Acceptance criteria | Verification | Depends on | Likely files/modules | Size |
 |---|---|---|---|---|---|---|
-| 1 | Foundation | Next.js, Go/Gin and PostgreSQL start locally; `/health` responds; config/secrets are server-side | Start services and call health endpoint; missing required config fails clearly | — | `apps/web`, `apps/api/cmd`, `apps/api/internal/config`, `db/migrations` | M |
+| 1 | Foundation (in progress) | Next.js and Go/Gin start locally; `/health` responds; PostgreSQL/config/secrets are server-side | Start services and call health endpoint; missing required config fails clearly | — | `apps/web`, `apps/api/cmd`, `apps/api/internal/config`, `db/migrations` | M |
 | 2 | Supabase Auth + roles | Login/register works; USER/SUPPORT/ADMIN stored/verified; protected Go routes reject invalid tokens | Test no token, expired token, each role, and cross-user order access | 1 | `apps/web/auth`, `apps/api/internal/auth`, `apps/api/internal/permissions`, `db/migrations` | M |
 | Checkpoint 1 | Foundation | Web/API/DB/auth run locally with role enforcement | Walk login and protected health/profile route | 1–2 | — | — |
-| 3 | deeKub design shell + home | Dark UI uses Purple/Blue, Cyan accent, success-only Green, 12–16px cards, subtle glow, Inter/Noto Sans Thai; home has hero, top sellers and popular top-ups | Review at desktop/mobile web widths; nav links, search/account controls respond | 2 | `apps/web/app/layout`, `apps/web/app/page`, `apps/web/styles/tokens`, `apps/web/components/header` | M |
-| 4 | Catalog + separate detail flows | Product list/details show game cover, platform, region, price/stock; Game Key and Top-up use different forms and CTAs | Key page has no player fields; top-up requires package, player ID/tag/region; invalid values blocked | 3 | `apps/api/internal/catalog`, `apps/web/app/products`, `apps/web/app/topup`, `apps/shared/api-client` | M |
+| 3 | deeKub design shell + home (demo shell complete) | Dark UI uses Purple/Blue, Cyan accent, success-only Green, 12–16px cards, subtle glow, Inter/Noto Sans Thai; home has hero, catalog and popular top-ups | Review at desktop/mobile web widths; nav links, search/account controls respond | 2 | `apps/web/app/layout`, `apps/web/app/page`, `apps/web/app/globals.css`, `apps/web/components` | M |
+| 4 | Catalog + separate detail flows (demo UI complete; API pending) | Product list/details show demo game art, platform, region, price; Key and Top-up use different forms and CTAs | Key page has no player fields; top-up requires game-specific account fields; invalid values blocked | 3 | `apps/api/internal/catalog`, `apps/web/components/storefront.tsx`, `apps/web/data/catalog.ts` | M |
 | 5 | CMS catalog management | Admin can create/edit/publish products and top-up packages; customers see published products only | CRUD flow; draft hidden; non-admin API calls rejected | 4 | `apps/api/internal/admin/catalog`, `apps/web/app/admin/products`, `apps/web/app/admin/topups`, `db/migrations` | M |
 | 6 | Game Key inventory | Admin import/add keys; counts show Total/Available/Reserved/Sold; list masks codes; reveal is authorized and audited | Duplicate key import rejected; unauthorized reveal rejected; no plaintext in list/logs | 5 | `apps/api/internal/keys`, `apps/api/internal/admin/keys`, `apps/web/app/admin/inventory`, `db/migrations` | M |
 | Checkpoint 2 | Store + CMS | Home/catalog/two product detail flows/CMS work with demo data | Admin publishes products; customer views each type correctly | 3–6 | — | — |

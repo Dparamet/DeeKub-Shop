@@ -6,6 +6,7 @@ out/
 
 # Go build/module caches (kept inside the workspace for sandboxed development)
 apps/api/.cache/
+apps/web/.cache/
 
 # Local environment and credentials
 .env
@@ -18,3 +19,4 @@ apps/api/.cache/
 .DS_Store
 Thumbs.db
 .vscode/
+*.tsbuildinfo

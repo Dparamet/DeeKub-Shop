@@ -2,7 +2,7 @@
 
 ร้าน Digital Product สำหรับซื้อ Game Key และเติมเกมจากเว็บไซต์เดียว วางระบบให้แยกวิธีส่งมอบสินค้าแต่ละประเภท และให้ Admin ติดตามออเดอร์ผิดพลาดได้
 
-> **สถานะ:** Phase 1 เริ่มแล้ว — มี Go API foundation และ `/health`; Web Store + CMS, PostgreSQL และ flow ซื้อขายยังอยู่ในแผนพัฒนา ใช้ Mock Payment และ Mock Top-up Provider เท่านั้น ยังไม่รองรับการชำระเงินจริงหรือการเติมเกมผ่าน provider จริง
+> **สถานะ:** Phase 1 เริ่มแล้ว — มี Go API `/health` และ Web Store/CMS shell ที่ใช้ข้อมูล demo; PostgreSQL, Auth, API-backed catalog และ flow ซื้อขายยังอยู่ในแผน ใช้ Mock Payment/Top-up เท่านั้น ยังไม่รองรับการชำระเงินจริงหรือ provider จริง
 
 ## เป้าหมาย
 
@@ -68,19 +68,40 @@ Frontend ไม่มีสิทธิ์กำหนดราคา สถา�
 ต้องมี Go 1.25 ขึ้นไป
 
 ```powershell
-cd apps/api
+Set-Location apps/api
 go run ./cmd/server
 ```
 
 ตรวจ health endpoint จากอีก terminal:
 
 ```powershell
+Set-Location apps/api
 Invoke-RestMethod http://localhost:8080/health
 go test ./...
 go vet ./...
 ```
 
 ผล `/health` ควรมี `status: ok` ตัว API ยังไม่มี database/auth integration ในขั้นนี้
+
+## Run Web Locally
+
+ต้องมี Node.js 20.9 ขึ้นไป และ npm
+
+```powershell
+Set-Location apps/web
+npm ci
+npm run dev
+```
+
+เปิด `http://localhost:3000` สำหรับหน้าร้าน และ `http://localhost:3000/admin` สำหรับ CMS dashboard ตัวอย่าง; ค้นหา/กรองสินค้า, เปิดรายละเอียดแยก Top-up กับ Game Key และดูตะกร้า demo ได้ แต่ยังไม่มี login, checkout หรือ API integration
+
+ตรวจคุณภาพก่อนส่งงาน:
+
+```powershell
+npm run lint
+npm run typecheck
+npm run build
+```
 
 ## Safety and Supply Requirements
 
@@ -91,7 +112,6 @@ go vet ./...
 
 ## Next Steps
 
-1. สร้าง Next.js app shell ตาม design tokens
-2. เพิ่ม PostgreSQL, migrations และ server-side configuration ให้ Go API
-3. ทำ vertical slices: catalog → order → mock payment → fulfillment → CMS
-4. Deploy staging และผูกโดเมนเมื่อเลือก Azure resources และมี remote/credentials พร้อม
+1. เพิ่ม PostgreSQL, migrations, config และเชื่อม catalog demo เข้ากับ Go API
+2. ทำ vertical slices: auth/roles → order → mock payment → fulfillment → CMS
+3. Deploy staging และผูกโดเมนเมื่อเลือก Azure resources และมี remote/credentials พร้อม
