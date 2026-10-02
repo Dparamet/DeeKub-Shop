@@ -1,0 +1,20 @@
+# JavaScript builds and local dependencies
+node_modules/
+.next/
+dist/
+out/
+
+# Go build/module caches (kept inside the workspace for sandboxed development)
+apps/api/.cache/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local editor/OS files
+.DS_Store
+Thumbs.db
+.vscode/

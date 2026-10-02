@@ -2,7 +2,7 @@
 
 ร้าน Digital Product สำหรับซื้อ Game Key และเติมเกมจากเว็บไซต์เดียว วางระบบให้แยกวิธีส่งมอบสินค้าแต่ละประเภท และให้ Admin ติดตามออเดอร์ผิดพลาดได้
 
-> **สถานะ:** กำลังเริ่ม Phase 1 — Web Store + CMS โดยใช้ Mock Payment และ Mock Top-up Provider เท่านั้น ยังไม่รองรับการชำระเงินจริงหรือการเติมเกมผ่าน provider จริง
+> **สถานะ:** Phase 1 เริ่มแล้ว — มี Go API foundation และ `/health`; Web Store + CMS, PostgreSQL และ flow ซื้อขายยังอยู่ในแผนพัฒนา ใช้ Mock Payment และ Mock Top-up Provider เท่านั้น ยังไม่รองรับการชำระเงินจริงหรือการเติมเกมผ่าน provider จริง
 
 ## เป้าหมาย
 
@@ -63,6 +63,25 @@ Frontend ไม่มีสิทธิ์กำหนดราคา สถา�
 - **Phase 2:** Windows Desktop ด้วย Tauri และ Mobile ด้วย Expo โดยใช้ Go API เดิม
 - แผนละเอียดและ acceptance criteria: [tasks/plan.md](tasks/plan.md), [tasks/todo.md](tasks/todo.md)
 
+## Run API Locally
+
+ต้องมี Go 1.25 ขึ้นไป
+
+```powershell
+cd apps/api
+go run ./cmd/server
+```
+
+ตรวจ health endpoint จากอีก terminal:
+
+```powershell
+Invoke-RestMethod http://localhost:8080/health
+go test ./...
+go vet ./...
+```
+
+ผล `/health` ควรมี `status: ok` ตัว API ยังไม่มี database/auth integration ในขั้นนี้
+
 ## Safety and Supply Requirements
 
 - Mock Payment/Mock Provider ใช้ใน local/demo เท่านั้น; ห้ามเปิดใช้กับ production
@@ -72,7 +91,7 @@ Frontend ไม่มีสิทธิ์กำหนดราคา สถา�
 
 ## Next Steps
 
-1. สร้าง Go API foundation และทดสอบ `/health`
-2. สร้าง Next.js app shell ตาม design tokens
+1. สร้าง Next.js app shell ตาม design tokens
+2. เพิ่ม PostgreSQL, migrations และ server-side configuration ให้ Go API
 3. ทำ vertical slices: catalog → order → mock payment → fulfillment → CMS
-4. Deploy staging และผูกโดเมนเมื่อมี remote/credentials ที่ตั้งใจใช้
+4. Deploy staging และผูกโดเมนเมื่อเลือก Azure resources และมี remote/credentials พร้อม

@@ -1,7 +1,7 @@
 # deeKub — Task Breakdown
 
 Phase 1 is Web Store + CMS only. Tauri Desktop and React Native Mobile are Phase 2; see plan.md.
-No code implementation has started. File paths below are proposed module locations.
+Status: Go API `/health` foundation is implemented on `feature/deekub-web-mvp`; all remaining rows are planned until checked below.
 
 | # | Task | Acceptance criteria | Verification | Depends on | Likely files/modules | Size |
 |---|---|---|---|---|---|---|
