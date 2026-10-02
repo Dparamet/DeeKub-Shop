@@ -2,7 +2,7 @@
 
 ร้าน Digital Product สำหรับซื้อ Game Key และเติมเกมจากเว็บไซต์เดียว วางระบบให้แยกวิธีส่งมอบสินค้าแต่ละประเภท และให้ Admin ติดตามออเดอร์ผิดพลาดได้
 
-> **สถานะ:** Phase 1 เริ่มแล้ว — มี Go API `/health` และ Web Store/CMS shell ที่ใช้ข้อมูล demo; PostgreSQL, Auth, API-backed catalog และ flow ซื้อขายยังอยู่ในแผน ใช้ Mock Payment/Top-up เท่านั้น ยังไม่รองรับการชำระเงินจริงหรือ provider จริง
+> **สถานะ:** Phase 1 กำลังพัฒนา — Go API มี `/health`, `/readyz`, public catalog API และ PostgreSQL migration/seed; Web Store/CMS ยังใช้ข้อมูล demo และยังไม่เชื่อม API ไม่มี Auth, checkout, การชำระเงินจริง หรือ provider จริง
 
 ## เป้าหมาย
 
@@ -65,23 +65,42 @@ Frontend ไม่มีสิทธิ์กำหนดราคา สถา�
 
 ## Run API Locally
 
-ต้องมี Go 1.25 ขึ้นไป
+ต้องมี Go 1.25 ขึ้นไปและ Docker Desktop ที่เปิด Docker Engine แล้ว
 
 ```powershell
+docker compose up -d postgres
+
 Set-Location apps/api
+$env:DATABASE_URL = "postgres://deekub:local-only-change-me@localhost:5432/deekub?sslmode=disable"
+go run ./cmd/migrate
 go run ./cmd/server
 ```
 
-ตรวจ health endpoint จากอีก terminal:
+`.env.example` ระบุค่า local development; Compose ใช้ค่าเริ่มต้นเดียวกันเมื่อยังไม่มี `.env` ไฟล์นี้ใช้เฉพาะเครื่อง local และห้ามนำรหัสผ่านตัวอย่างไป deploy
+
+API endpoints ปัจจุบัน:
+
+```text
+GET /health                 # liveness; ไม่ตรวจ DB
+GET /readyz                 # readiness; ต้องเชื่อม PostgreSQL ได้
+GET /products               # รายการสินค้าที่ publish แล้ว
+GET /products?type=TOPUP    # กรอง TOPUP หรือ GAME_KEY
+GET /products?q=valorant    # ค้นชื่อเกม/สินค้า
+GET /products/{slug}        # รายละเอียดสินค้าตาม slug
+```
+
+ตรวจ endpoint และ Go checks จากอีก terminal:
 
 ```powershell
 Set-Location apps/api
 Invoke-RestMethod http://localhost:8080/health
+Invoke-RestMethod http://localhost:8080/readyz
+Invoke-RestMethod http://localhost:8080/products
 go test ./...
 go vet ./...
 ```
 
-ผล `/health` ควรมี `status: ok` ตัว API ยังไม่มี database/auth integration ในขั้นนี้
+ข้อมูลสินค้าเริ่มต้นเป็น seed สำหรับ demo เท่านั้น; Web ยังอ่าน catalog จากข้อมูล demo ใน frontend ไม่ได้เรียก API
 
 ## Run Web Locally
 
@@ -112,6 +131,6 @@ npm run build
 
 ## Next Steps
 
-1. เพิ่ม PostgreSQL, migrations, config และเชื่อม catalog demo เข้ากับ Go API
-2. ทำ vertical slices: auth/roles → order → mock payment → fulfillment → CMS
-3. Deploy staging และผูกโดเมนเมื่อเลือก Azure resources และมี remote/credentials พร้อม
+1. เชื่อม Web catalog กับ Go API และทำ CMS catalog CRUD พร้อม Auth/roles
+2. ทำ vertical slices: order → mock payment → fulfillment → CMS operations
+3. Deploy staging และผูกโดเมนเมื่อเลือก Azure resources, ตั้ง spending alert และมี remote พร้อม
