@@ -168,6 +168,7 @@ export function Storefront() {
             <a href="#topups" onClick={() => { setMobileMenuOpen(false); resetCatalogView(); }}>เติมเกม</a>
             <a href="#game-keys" onClick={() => { setMobileMenuOpen(false); resetCatalogView(); }}>Game Keys</a>
             <a href="#offers" onClick={() => { setMobileMenuOpen(false); resetCatalogView(); }}>เกี่ยวกับเรา</a>
+            <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>Admin</Link>
           </nav>
 
           <div className="header-actions">

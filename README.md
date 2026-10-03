@@ -2,7 +2,7 @@
 
 ร้าน Digital Product สำหรับซื้อ Game Key และเติมเกมจากเว็บไซต์เดียว วางระบบให้แยกวิธีส่งมอบสินค้าแต่ละประเภท และให้ Admin ติดตามออเดอร์ผิดพลาดได้
 
-> **สถานะ:** Phase 1 กำลังพัฒนา — Go API มี `/health`, `/readyz`, public catalog API และ PostgreSQL migration/seed; Web Store/CMS ยังใช้ข้อมูล demo และยังไม่เชื่อม API ไม่มี Auth, checkout, การชำระเงินจริง หรือ provider จริง
+> **สถานะ:** Phase 1 กำลังพัฒนา — Go API มี `/health`, `/readyz`, public catalog API และ PostgreSQL migration/seed; Web Store และ catalog ใน `/admin` เชื่อม API แล้ว พร้อม demo fallback เมื่อ API ไม่พร้อม ส่วนออเดอร์และคลัง Key ใน Admin ยังเป็น demo ไม่มี Auth, CMS writes, checkout, การชำระเงินจริง หรือ provider จริง
 
 ## เป้าหมาย
 
@@ -100,7 +100,7 @@ go test ./...
 go vet ./...
 ```
 
-ข้อมูลสินค้าเริ่มต้นเป็น seed สำหรับ demo เท่านั้น; Web ยังอ่าน catalog จากข้อมูล demo ใน frontend ไม่ได้เรียก API
+ข้อมูลสินค้าเริ่มต้นเป็น seed สำหรับ demo เท่านั้น; Web Store และ `/admin` อ่าน catalog ผ่าน `/api/catalog` ที่เชื่อม Go API ฝั่ง server
 
 ## Run Web Locally
 
@@ -113,7 +113,17 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-เปิด `http://localhost:3000` สำหรับหน้าร้าน และ `http://localhost:3000/admin` สำหรับ CMS dashboard ตัวอย่าง; Storefront อ่าน catalog ผ่าน Next.js route `/api/catalog` ซึ่งเชื่อม Go API ฝั่ง server. ถ้า API ไม่พร้อม หน้าร้านจะแสดง catalog demo และปุ่มลองเชื่อมใหม่. ยังไม่มี login, checkout หรือการชำระเงินจริง
+เปิด `http://localhost:3000` สำหรับหน้าร้าน และ `http://localhost:3000/admin` สำหรับ Admin preview; เมนูหลักของร้านมีลิงก์ **Admin** ทั้ง desktop และ mobile. Storefront และ Admin อ่าน catalog ผ่าน Next.js route `/api/catalog` ซึ่งเชื่อม Go API ฝั่ง server ถ้า API ไม่พร้อมจะแสดง catalog demo พร้อมสถานะและปุ่มโหลดใหม่ ยังไม่มี login, checkout หรือการชำระเงินจริง
+
+### Admin preview (`/admin`)
+
+- Dashboard คำนวณยอดส่งมอบสำเร็จ จำนวนออเดอร์ และรายการรอตรวจสอบจากข้อมูล demo ชุดเดียวกับตาราง
+- เมนูภาพรวม สินค้าและแพ็กเกจ คำสั่งซื้อ และคลัง Key; รองรับหน้าจอมือถือ
+- Catalog แสดงสินค้าที่เผยแพร่จาก API ค้นหา/กรอง Top-up หรือ Game Key และเปิดดู platform, region, การส่งมอบ และช่องข้อมูลผู้เล่น
+- ออเดอร์ demo ค้นหา/กรองสถานะ เปิดรายละเอียด และส่งออก `deekub-demo-orders.csv` ตามตัวกรองปัจจุบัน
+- คลัง Key เป็นข้อมูลสรุปจำลอง ไม่มีรหัสจริง และยังไม่มีการเพิ่ม/แก้ไขสินค้า นำเข้า Key หรือเปลี่ยนสถานะออเดอร์
+
+`/admin` ยังเป็นหน้า preview ที่เปิดได้โดยไม่มี Auth ใช้เฉพาะ catalog สาธารณะและข้อมูลจำลอง ต้องเพิ่มการตรวจ ADMIN/SUPPORT ฝั่ง Go API ก่อนต่อข้อมูลหรือคำสั่งจัดการจริง การตั้ง `noindex` ไม่ใช่การควบคุมสิทธิ์
 
 ตรวจคุณภาพก่อนส่งงาน:
 

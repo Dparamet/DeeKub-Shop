@@ -1,7 +1,7 @@
 # deeKub — Task Breakdown
 
 Phase 1 is Web Store + CMS only. Tauri Desktop and React Native Mobile are Phase 2; see plan.md.
-Status: `feature/deekub-web-mvp` contains a demo storefront/CMS shell, server-side Storefront-to-Go catalog connection, `/health`, `/readyz`, PostgreSQL catalog migrations/seeds, and public catalog endpoints. Auth, CMS writes, orders and transactions remain planned.
+Status: `feature/deekub-web-mvp` contains a storefront and `/admin` preview, server-side Storefront/Admin-to-Go catalog connection, `/health`, `/readyz`, PostgreSQL catalog migrations/seeds, and public catalog endpoints. Admin includes catalog search/type filters, demo order detail/search/status filters and filtered CSV export. Dashboard totals derive from the displayed demo order dataset. Auth, CMS writes, real orders/inventory and transactions remain planned.
 
 | # | Task | Acceptance criteria | Verification | Depends on | Likely files/modules | Size |
 |---|---|---|---|---|---|---|
