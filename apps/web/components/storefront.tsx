@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowDownRight,
@@ -28,6 +28,8 @@ type ProductFilter = "all" | ProductKind;
 export function Storefront() {
   const [filter, setFilter] = useState<ProductFilter>("all");
   const [search, setSearch] = useState("");
+  const [catalogProducts, setCatalogProducts] = useState(products);
+  const [catalogStatus, setCatalogStatus] = useState<"loading" | "connected" | "demo">("loading");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartProducts, setCartProducts] = useState<Product[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -37,6 +39,26 @@ export function Storefront() {
   const cartDialog = useRef<HTMLDialogElement>(null);
   const cartButton = useRef<HTMLButtonElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
+
+  const refreshCatalog = useCallback(async (signal?: AbortSignal) => {
+    setCatalogStatus("loading");
+    try {
+      const response = await fetch("/api/catalog", { signal, cache: "no-store" });
+      if (!response.ok) throw new Error("catalog request failed");
+      const body = await response.json() as { items?: Product[] };
+      if (!Array.isArray(body.items)) throw new Error("catalog response is invalid");
+      setCatalogProducts(body.items);
+      setCatalogStatus("connected");
+    } catch {
+      if (!signal?.aborted) setCatalogStatus("demo");
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void refreshCatalog(controller.signal);
+    return () => controller.abort();
+  }, [refreshCatalog]);
 
   useEffect(() => {
     const dialog = productDialog.current;
@@ -72,12 +94,12 @@ export function Storefront() {
 
   const visibleProducts = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("th-TH");
-    return products.filter((product) => {
+    return catalogProducts.filter((product) => {
       const matchesKind = filter === "all" || product.kind === filter;
       const matchesSearch = !term || `${product.game} ${product.title} ${product.description}`.toLocaleLowerCase("th-TH").includes(term);
       return matchesKind && matchesSearch;
     });
-  }, [filter, search]);
+  }, [catalogProducts, filter, search]);
 
   const topups = visibleProducts.filter((product) => product.kind === "topup");
   const keys = visibleProducts.filter((product) => product.kind === "key");
@@ -234,10 +256,23 @@ export function Storefront() {
             <div>
               <div className="section-kicker">DEE KUB STORE</div>
               <h2 id="catalog-title">สินค้าสำหรับเกมเมอร์</h2>
-              <p>สินค้าและราคาสำหรับดูหน้าจอเท่านั้น</p>
+              <div className="catalog-data-status" role="status" aria-live="polite">
+                <span>
+                  {catalogStatus === "connected"
+                    ? `เชื่อม Go API แล้ว · ${catalogProducts.length} รายการ seed สำหรับ demo`
+                    : catalogStatus === "loading"
+                      ? "กำลังตรวจ Go API · แสดง catalog demo ชั่วคราว"
+                      : "Go API ยังไม่พร้อม · แสดง catalog demo"}
+                </span>
+                {catalogStatus !== "connected" && (
+                  <button type="button" disabled={catalogStatus === "loading"} onClick={() => void refreshCatalog()}>
+                    {catalogStatus === "loading" ? "กำลังเชื่อมต่อ…" : "ลองอีกครั้ง"}
+                  </button>
+                )}
+              </div>
             </div>
             <div className="catalog-controls" role="group" aria-label="กรองประเภทสินค้า">
-              <button className={filter === "all" ? "filter-chip active" : "filter-chip"} onClick={() => setFilter("all")}>ทั้งหมด <span>{products.length}</span></button>
+              <button className={filter === "all" ? "filter-chip active" : "filter-chip"} onClick={() => setFilter("all")}>ทั้งหมด <span>{catalogProducts.length}</span></button>
               <button className={filter === "topup" ? "filter-chip active" : "filter-chip"} onClick={() => setFilter("topup")}>เติมเกม</button>
               <button className={filter === "key" ? "filter-chip active" : "filter-chip"} onClick={() => setFilter("key")}>Game Keys</button>
             </div>
@@ -347,7 +382,7 @@ export function Storefront() {
                 <div className="key-delivery-note"><KeyRound size={15} aria-hidden="true" /><span>Key demo จะแสดงหลังระบบชำระเงินและตรวจสิทธิ์พร้อมใช้งาน</span></div>
               )}
               <div className="dialog-buy-row">
-                <div><small>ราคาเดโม</small><strong>{formatPrice(selectedProduct.price)}</strong></div>
+                <div><small>ราคาเดโม</small><strong>{formatPrice(selectedProduct.price, selectedProduct.currency)}</strong></div>
                 <button className="button button-primary" type="submit">เพิ่มลงตะกร้า <ShoppingBag size={16} aria-hidden="true" /></button>
               </div>
               <p className="dialog-demo-note">ตัวอย่างหน้าร้าน · ไม่มีการหักเงินจริงหรือส่งข้อมูลไปยังเกม</p>
@@ -375,7 +410,7 @@ export function Storefront() {
                 {cartProducts.map((product, index) => (
                   <li key={`${product.id}-${index}`}>
                     <GameArt style={product.artwork} compact />
-                    <div className="cart-item-info"><strong>{product.title}</strong><span>{product.game} · {product.kind === "topup" ? "เติมเกม" : "Game Key"}</span><b>{formatPrice(product.price)}</b></div>
+                    <div className="cart-item-info"><strong>{product.title}</strong><span>{product.game} · {product.kind === "topup" ? "เติมเกม" : "Game Key"}</span><b>{formatPrice(product.price, product.currency)}</b></div>
                     <button className="cart-remove" onClick={() => removeFromCart(index)} aria-label={`นำ ${product.title} ออกจากตะกร้า`}>นำออก</button>
                   </li>
                 ))}

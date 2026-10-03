@@ -23,7 +23,7 @@ export function ProductCard({ product, onOpen }: { product: Product; onOpen: (pr
         <div className="product-card-footer">
           <div>
             <span className="price-caption">ราคาเดโม</span>
-            <strong>{formatPrice(product.price)}</strong>
+            <strong>{formatPrice(product.price, product.currency)}</strong>
           </div>
           <button className="icon-button product-open" onClick={() => onOpen(product)} aria-label={`เลือก ${product.title}`}>
             <ArrowUpRight size={18} aria-hidden="true" />

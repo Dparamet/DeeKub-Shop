@@ -194,7 +194,7 @@ export default function AdminPage() {
             <div className="orders-footer"><span>แสดง {visibleOrders.length} จาก 248 รายการตัวอย่าง</span><a href="#recent-orders">ดูคำสั่งซื้อทั้งหมด <ArrowRight size={14} /></a></div>
           </section>
 
-          <footer className="admin-footer"><span>deeKub Admin · Demo build</span><span>Go API foundation connected in a later slice</span></footer>
+          <footer className="admin-footer"><span>deeKub Admin · Demo build</span><span>Catalog API ใช้ Go · ข้อมูล CMS ด้านล่างเป็น demo</span></footer>
         </div>
       </div>
       <div className="toast-region" role="status" aria-live="polite">{announcement}</div>

@@ -9,11 +9,13 @@ export type ProductField = {
 
 export type Product = {
   id: string;
+  slug?: string;
   kind: ProductKind;
   game: string;
   title: string;
   description: string;
   price: number;
+  currency?: string;
   platform: string;
   region: string;
   delivery: string;
@@ -111,6 +113,11 @@ export const products: Product[] = [
   },
 ];
 
-export function formatPrice(value: number) {
-  return `฿${new Intl.NumberFormat("th-TH").format(value)}`;
+export function formatPrice(value: number, currency = "THB") {
+  return new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

@@ -104,22 +104,23 @@ go vet ./...
 
 ## Run Web Locally
 
-ต้องมี Node.js 20.9 ขึ้นไป และ npm
+ต้องมี Node.js 20.9 ขึ้นไป และ npm; ให้เริ่ม Go API และ PostgreSQL ก่อนถ้าต้องการใช้ catalog จากฐานข้อมูล
 
 ```powershell
 Set-Location apps/web
-npm ci
-npm run dev
+$env:DEEKUB_API_URL = "http://localhost:8080"
+npm.cmd ci
+npm.cmd run dev
 ```
 
-เปิด `http://localhost:3000` สำหรับหน้าร้าน และ `http://localhost:3000/admin` สำหรับ CMS dashboard ตัวอย่าง; ค้นหา/กรองสินค้า, เปิดรายละเอียดแยก Top-up กับ Game Key และดูตะกร้า demo ได้ แต่ยังไม่มี login, checkout หรือ API integration
+เปิด `http://localhost:3000` สำหรับหน้าร้าน และ `http://localhost:3000/admin` สำหรับ CMS dashboard ตัวอย่าง; Storefront อ่าน catalog ผ่าน Next.js route `/api/catalog` ซึ่งเชื่อม Go API ฝั่ง server. ถ้า API ไม่พร้อม หน้าร้านจะแสดง catalog demo และปุ่มลองเชื่อมใหม่. ยังไม่มี login, checkout หรือการชำระเงินจริง
 
 ตรวจคุณภาพก่อนส่งงาน:
 
 ```powershell
-npm run lint
-npm run typecheck
-npm run build
+npm.cmd run lint
+npm.cmd run typecheck
+npm.cmd run build
 ```
 
 ## Safety and Supply Requirements
@@ -131,6 +132,6 @@ npm run build
 
 ## Next Steps
 
-1. เชื่อม Web catalog กับ Go API และทำ CMS catalog CRUD พร้อม Auth/roles
+1. ทำ CMS catalog CRUD พร้อม Auth/roles และซิงก์การเผยแพร่สินค้า
 2. ทำ vertical slices: order → mock payment → fulfillment → CMS operations
 3. Deploy staging และผูกโดเมนเมื่อเลือก Azure resources, ตั้ง spending alert และมี remote พร้อม
