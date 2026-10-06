@@ -16,6 +16,15 @@ export function OrderDetail({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [copyMessage, setCopyMessage] = useState("");
+  async function copyDelivery(note: string) {
+    try {
+      await navigator.clipboard.writeText(note);
+      setCopyMessage("คัดลอกผลจำลองแล้ว (ใช้จริงไม่ได้)");
+    } catch {
+      setCopyMessage("คัดลอกอัตโนมัติไม่ได้ กรุณาเลือกข้อความแล้วคัดลอกเอง");
+    }
+  }
   useEffect(() => {
     const controller = new AbortController();
     void requestJSON<Order>(`/api/shop/orders/${id}`, {
@@ -107,10 +116,22 @@ export function OrderDetail({ id }: { id: string }) {
                             ผลการส่งมอบจำลอง (ใช้จริงไม่ได้)
                           </p>
                           <p className="delivery-note">{i.delivery_note}</p>
+                          <button
+                            type="button"
+                            className="text-button"
+                            onClick={() => void copyDelivery(i.delivery_note)}
+                          >
+                            คัดลอกผลจำลอง
+                          </button>
                         </>
                       )}
                     </div>
                   ))}
+                  {copyMessage && (
+                    <p className="muted small" role="status">
+                      {copyMessage}
+                    </p>
+                  )}
                   <div className="summary-row total">
                     <span>ยอดรวม</span>
                     <strong>

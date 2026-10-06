@@ -1,5 +1,7 @@
 # deeKub — Implementation Plan
 
+> แผนเดิมสำหรับอ้างอิงวันที่ 2026-10-03 สถานะเก่าและรายละเอียดอนาคตด้านล่างไม่ใช่ขอบเขตที่กำลังทำ ขอบเขตปัจจุบันคือ [Supabase Auth + catalog/orders จำลอง + USER/ADMIN](../docs/superpowers/plans/2026-10-06-shop-core.md) และ [Light/Dark storefront direction](../docs/DESIGN.md) ดูงานที่เสร็จและจุดค้างใน [todo.md](todo.md)
+
 วันที่: 2026-10-03
 สถานะ: Phase 1 เริ่มแล้ว — Go API `/health` และ Web Store/CMS demo shell อยู่บน branch `feature/deekub-web-mvp`; PostgreSQL, auth, API integration และ flow ซื้อขายยังไม่เริ่ม
 

@@ -13,9 +13,9 @@ export function AuthForm({
   initial?: "login" | "signup" | "reset";
 }) {
   const params = useSearchParams();
-  const [mode, setMode] = useState<"login" | "signup" | "recover" | "reset">(
-    initial,
-  );
+  const [mode, setMode] = useState<
+    "login" | "signup" | "recover" | "resend" | "reset"
+  >(initial);
   const [error, setError] = useState(
     params.get("error") ? errorMessage(params.get("error")!) : "",
   );
@@ -26,6 +26,7 @@ export function AuthForm({
     login: "เข้าสู่ระบบ",
     signup: "สร้างบัญชี deeKub",
     recover: "ลืมรหัสผ่าน",
+    resend: "ส่งอีเมลยืนยันอีกครั้ง",
     reset: "ตั้งรหัสผ่านใหม่",
   };
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -58,9 +59,13 @@ export function AuthForm({
         setNotice(
           "ถ้ามีบัญชีนี้ในระบบ เราจะส่งลิงก์รีเซ็ตไปให้ ตรวจ Inbox และ Spam แล้วเปิดลิงก์ในเบราว์เซอร์นี้",
         );
+      else if (mode === "resend")
+        setNotice(
+          "หากบัญชีนี้ยังรอยืนยัน เราจะส่งลิงก์ใหม่ให้ ตรวจ Inbox และ Spam แล้วเปิดลิงก์ในเบราว์เซอร์นี้",
+        );
       else if (mode === "signup" && result.confirmation)
         setNotice(
-          "ส่งอีเมลยืนยันแล้ว เปิดลิงก์ในอีเมลด้วยเบราว์เซอร์นี้ก่อนเข้าสู่ระบบ",
+          "ตรวจ Inbox และ Spam แล้วเปิดลิงก์ยืนยันในเบราว์เซอร์นี้ หากเคยสมัครแล้วให้ลองเข้าสู่ระบบหรือขออีเมลยืนยันอีกครั้ง",
         );
       else {
         const destination = params.get("next");
@@ -96,7 +101,11 @@ export function AuthForm({
               ? "เข้าใช้งานตะกร้าและประวัติคำสั่งซื้อ"
               : mode === "signup"
                 ? "บัญชีเดียวสำหรับ Game Keys และเติมเกม"
-                : "ใช้รหัสผ่านสำหรับบัญชี deeKub ของคุณ"}
+                : mode === "resend"
+                  ? "ใช้อีเมลเดียวกับที่สมัคร แล้วเปิดลิงก์ใหม่ในเบราว์เซอร์นี้"
+                  : mode === "recover"
+                    ? "กรอกอีเมลของบัญชีเพื่อขอลิงก์ตั้งรหัสผ่านใหม่"
+                    : "ใช้รหัสผ่านสำหรับบัญชี deeKub ของคุณ"}
           </p>
           {!configured ? (
             <p className="form-error" role="alert">
@@ -104,88 +113,120 @@ export function AuthForm({
             </p>
           ) : (
             <form className="shop-form" onSubmit={submit} key={mode}>
-              {mode !== "reset" && (
-                <label>
-                  อีเมล
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    maxLength={254}
-                    autoComplete="email"
-                  />
-                </label>
-              )}
-              {mode !== "recover" && (
-                <>
+              <fieldset disabled={busy}>
+                {mode !== "reset" && (
                   <label>
-                    รหัสผ่าน
+                    อีเมล
                     <input
-                      name="password"
-                      type={visible ? "text" : "password"}
+                      name="email"
+                      type="email"
                       required
-                      minLength={mode === "login" ? 1 : 8}
-                      maxLength={128}
-                      autoComplete={
-                        mode === "login" ? "current-password" : "new-password"
-                      }
+                      maxLength={254}
+                      autoComplete="email"
                     />
                   </label>
-                  <button
-                    className="text-button"
-                    type="button"
-                    aria-pressed={visible}
-                    onClick={() => setVisible((v) => !v)}
-                  >
-                    {visible ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
-                  </button>
-                </>
-              )}
-              {(mode === "signup" || mode === "reset") && (
-                <label>
-                  ยืนยันรหัสผ่าน
-                  <input
-                    name="confirm"
-                    type={visible ? "text" : "password"}
-                    required
-                    minLength={8}
-                    maxLength={128}
-                    autoComplete="new-password"
-                  />
-                </label>
-              )}
-              {error && (
-                <p className="form-error" role="alert">
-                  {error}
-                </p>
-              )}
-              {notice && (
-                <p className="form-success" role="status">
-                  {notice}
-                </p>
-              )}
-              <button className="button" disabled={busy}>
-                {busy
-                  ? "กำลังดำเนินการ…"
-                  : mode === "recover"
-                    ? "ส่งลิงก์รีเซ็ตรหัสผ่าน"
-                    : titles[mode]}
-              </button>
+                )}
+                {mode !== "recover" && mode !== "resend" && (
+                  <>
+                    <label>
+                      รหัสผ่าน
+                      <input
+                        name="password"
+                        type={visible ? "text" : "password"}
+                        required
+                        minLength={mode === "login" ? 1 : 8}
+                        maxLength={128}
+                        autoComplete={
+                          mode === "login" ? "current-password" : "new-password"
+                        }
+                      />
+                    </label>
+                    <button
+                      className="text-button"
+                      type="button"
+                      aria-pressed={visible}
+                      onClick={() => setVisible((v) => !v)}
+                    >
+                      {visible ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                    </button>
+                  </>
+                )}
+                {(mode === "signup" || mode === "reset") && (
+                  <label>
+                    ยืนยันรหัสผ่าน
+                    <input
+                      name="confirm"
+                      type={visible ? "text" : "password"}
+                      required
+                      minLength={8}
+                      maxLength={128}
+                      autoComplete="new-password"
+                    />
+                  </label>
+                )}
+                {error && (
+                  <p className="form-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                {notice && (
+                  <p className="form-success" role="status">
+                    {notice}
+                  </p>
+                )}
+                <button className="button" disabled={busy}>
+                  {busy
+                    ? "กำลังดำเนินการ…"
+                    : mode === "recover"
+                      ? "ส่งลิงก์รีเซ็ตรหัสผ่าน"
+                      : titles[mode]}
+                </button>
+              </fieldset>
             </form>
           )}
           {mode === "login" ? (
             <div className="auth-links">
-              <button className="text-button" onClick={() => change("signup")}>
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={() => change("signup")}
+              >
                 ยังไม่มีบัญชี? สมัครสมาชิก
               </button>
-              <button className="text-button" onClick={() => change("recover")}>
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={() => change("recover")}
+              >
                 ลืมรหัสผ่าน
+              </button>
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={() => change("resend")}
+              >
+                ส่งอีเมลยืนยันอีกครั้ง
               </button>
             </div>
           ) : (
-            <button className="text-button" onClick={() => change("login")}>
-              กลับไปเข้าสู่ระบบ
-            </button>
+            <div className="auth-links">
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={() => change("login")}
+              >
+                กลับไปเข้าสู่ระบบ
+              </button>
+              {mode === "signup" && (
+                <button
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => change("resend")}
+                >
+                  ส่งอีเมลยืนยันอีกครั้ง
+                </button>
+              )}
+            </div>
           )}
         </div>
       </main>

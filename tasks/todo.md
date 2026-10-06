@@ -1,5 +1,23 @@
 # deeKub — Task Breakdown
 
+## สถานะปัจจุบัน — 2026-10-06
+
+แผนที่ใช้รอบนี้: [Shop Core](../docs/superpowers/plans/2026-10-06-shop-core.md) และหน้าตาตาม [DESIGN](../docs/DESIGN.md) ขอบเขตที่ผู้ใช้อนุมัติคือ Supabase Auth + Go API + PostgreSQL พร้อมการชำระเงิน/ส่งมอบจำลองและสิทธิ์ USER/ADMIN
+
+- [x] บัญชีสมาชิก สมัคร/เข้า/ออก/ยืนยันอีเมล/รีเซ็ต และขออีเมลยืนยันใหม่
+- [x] Catalog จาก DB, ภาพจริง 29 รายการ, ค้นหา/กรอง, รายละเอียดสินค้า, wishlist และตะกร้า
+- [x] สร้าง/อ่าน/ชำระเงินจำลอง/ยกเลิกคำสั่งซื้อของตนเอง พร้อม stock reservation, expiry และ idempotency
+- [x] Admin ตรวจ role ทั้งเว็บและ API, จัดการสินค้า/ราคา/สต็อก/เผยแพร่ และอ่านคำสั่งซื้อ
+- [x] Light/Dark mode ทั้งร้านและ Admin พร้อมจำค่า; ค้นหา/กรองคำสั่งซื้อ
+- [ ] กำหนด Admin คนแรกภายหลังสมัครและยืนยันบัญชี ตามที่ผู้ใช้เลือกให้แยกขั้นตอนนี้ออก; `admin:grant` ล่าสุดยังไม่พบบัญชีเป้าหมาย
+- [ ] เดิน flow ที่ต้องล็อกอินจริง รวมสิทธิ์ USER/ADMIN และคำสั่งซื้อใน environment นี้
+
+สถานะการ compile และหน้าที่ดูได้จริงบันทึกใน `docs/verification/` ยังไม่ถือว่าระบบผ่านทุก flow จนกว่าจะทำรายการด้วยบัญชีจริงได้
+
+## แผนเดิมสำหรับอ้างอิง (ยังไม่ใช่รายการงานของรอบนี้)
+
+ตารางด้านล่างเป็นแผนเดิมวันที่ 2026-10-03 เก็บไว้เป็นแนวทางอนาคต สถานะและทิศทาง UI ในตารางไม่สะท้อน implementation ปัจจุบัน งาน real inventory/provider, SUPPORT, reports, Azure, desktop/mobile ต้องกำหนดขอบเขตเพิ่มก่อนเริ่ม
+
 Phase 1 is Web Store + CMS only. Tauri Desktop and React Native Mobile are Phase 2; see plan.md.
 Status: `feature/deekub-web-mvp` contains a storefront and `/admin` preview, server-side Storefront/Admin-to-Go catalog connection, `/health`, `/readyz`, PostgreSQL catalog migrations/seeds, and public catalog endpoints. Admin includes catalog search/type filters, demo order detail/search/status filters and filtered CSV export. Dashboard totals derive from the displayed demo order dataset. Auth, CMS writes, real orders/inventory and transactions remain planned.
 

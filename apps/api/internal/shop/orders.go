@@ -159,7 +159,7 @@ const orderJSON = `to_jsonb(o) - 'idempotency_key' - 'request_hash' || jsonb_bui
 func (h *Handler) listOrders(c *gin.Context)      { h.orders(c, false) }
 func (h *Handler) listAdminOrders(c *gin.Context) { h.orders(c, true) }
 func (h *Handler) orders(c *gin.Context, admin bool) {
-	rows, err := h.pool.Query(c.Request.Context(), `SELECT `+orderJSON+` FROM orders o WHERE ($1 OR user_id=$2) ORDER BY created_at DESC LIMIT 100`, admin, auth.Current(c).ID)
+	rows, err := h.pool.Query(c.Request.Context(), `SELECT `+orderJSON+` || CASE WHEN $1 THEN jsonb_build_object('buyer_email',COALESCE((SELECT email FROM profiles WHERE id=o.user_id),'')) ELSE '{}'::jsonb END FROM orders o WHERE ($1 OR user_id=$2) ORDER BY created_at DESC LIMIT 100`, admin, auth.Current(c).ID)
 	if err != nil {
 		respondError(c, err)
 		return

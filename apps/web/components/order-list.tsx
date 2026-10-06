@@ -17,6 +17,22 @@ export function OrderList({ admin = false }: { admin?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("");
+  const search = query.trim().toLocaleLowerCase();
+  const visible = orders.filter(
+    (order) =>
+      (!status || order.status === status) &&
+      [
+        order.id,
+        order.buyer_email || "",
+        ...(admin ? [order.user_id] : []),
+        ...order.items.map((item) => item.name),
+      ]
+        .join(" ")
+        .toLocaleLowerCase()
+        .includes(search),
+  );
   useEffect(() => {
     const controller = new AbortController();
     void requestJSON<{ items: Order[] }>(
@@ -52,6 +68,29 @@ export function OrderList({ admin = false }: { admin?: boolean }) {
           </button>
         )}
       </div>
+      <div className="order-controls shop-form">
+        <label>
+          {admin
+            ? "ค้นหาเลขคำสั่งซื้อ สินค้า หรืออีเมลผู้ซื้อ"
+            : "ค้นหาเลขคำสั่งซื้อหรือสินค้า"}
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+        <label>
+          สถานะ
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">ทั้งหมด</option>
+            {Object.entries(orderStatus).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <div className="page-heading">
         <h2>
           {admin ? "100 รายการล่าสุด" : "ประวัติคำสั่งซื้อ (100 รายการล่าสุด)"}
@@ -85,9 +124,25 @@ export function OrderList({ admin = false }: { admin?: boolean }) {
             </Link>
           )}
         </div>
+      ) : !visible.length ? (
+        <div className="empty-state">
+          <h2>ไม่พบคำสั่งซื้อตามตัวกรอง</h2>
+          <button
+            className="button button-secondary"
+            onClick={() => {
+              setQuery("");
+              setStatus("");
+            }}
+          >
+            ล้างตัวกรอง
+          </button>
+        </div>
       ) : (
         <div className="order-list">
-          {orders.map((o) => (
+          <p className="muted small" role="status">
+            {visible.length} จาก {orders.length} รายการที่โหลด
+          </p>
+          {visible.map((o) => (
             <article className="shop-panel" key={o.id}>
               <div className="line-heading">
                 <div>
@@ -103,7 +158,11 @@ export function OrderList({ admin = false }: { admin?: boolean }) {
               <p>
                 {o.items.map((i) => `${i.name} × ${i.quantity}`).join(", ")}
               </p>
-              {admin && <p className="muted small">ผู้ซื้อ: {o.user_id}</p>}
+              {admin && (
+                <p className="muted small">
+                  ผู้ซื้อ: {o.buyer_email || o.user_id}
+                </p>
+              )}
               <div className="line-heading">
                 <strong>{formatPrice(o.total_minor / 100, o.currency)}</strong>
                 {!admin && (

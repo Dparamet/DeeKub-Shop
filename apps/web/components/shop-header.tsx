@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Heart, ShoppingBag, UserRound } from "lucide-react";
 import { useShop } from "@/components/shop-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function ShopHeader() {
   const { cart, user, authLoading } = useShop();
@@ -24,6 +25,7 @@ export function ShopHeader() {
           <Link href="/?type=key">Game Keys / Gift Cards</Link>
         </nav>
         <div className="shop-header-actions">
+          <ThemeToggle />
           <Link
             href="/wishlist"
             className="shop-icon"

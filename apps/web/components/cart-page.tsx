@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShopHeader } from "@/components/shop-header";
@@ -10,11 +10,24 @@ import { requestJSON } from "@/lib/shop-client";
 
 export function CartPage() {
   const router = useRouter();
-  const { cart, update, remove, clear, hydrated, user, authLoading, authError } =
-    useShop();
+  const {
+    cart,
+    update,
+    remove,
+    clear,
+    hydrated,
+    user,
+    authLoading,
+    authError,
+  } = useShop();
   const { products, loading, error: catalogError, reload } = useCatalog();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const checkoutRef = useRef<{
+    user: string;
+    payload: string;
+    key: string;
+  } | null>(null);
   const unavailable = cart.some((i) => {
     const p = products.find((p) => p.id === i.product_id);
     return !p || (p.stock ?? 0) < i.quantity;
@@ -27,33 +40,62 @@ export function CartPage() {
   );
   async function checkout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (
+      busy ||
+      unavailable ||
+      loading ||
+      catalogError ||
+      authLoading ||
+      authError
+    )
+      return;
     if (!user) {
       router.push("/login?next=/cart");
       return;
     }
     setBusy(true);
     setError("");
-    const items = cart.map((i) => ({
-      ...i,
-      expected_price_minor: Math.round(
-        products.find((p) => p.id === i.product_id)!.price * 100,
-      ),
-    }));
+    const items = cart.map((i) => {
+      const product = products.find((p) => p.id === i.product_id)!;
+      return {
+        ...i,
+        account_fields: Object.fromEntries(
+          (product.fields || []).map((field) => [
+            field.id,
+            (i.account_fields[field.id] || "").trim(),
+          ]),
+        ),
+        expected_price_minor: Math.round(product.price * 100),
+      };
+    });
     const payload = JSON.stringify({ items });
     let key = crypto.randomUUID();
+    if (
+      checkoutRef.current?.payload === payload &&
+      checkoutRef.current.user === user.id
+    )
+      key = checkoutRef.current.key;
     try {
       const stored = JSON.parse(
         sessionStorage.getItem("deekub.checkout") || "null",
       );
-      if (stored?.payload === payload && stored?.user === user.id)
+      if (
+        stored?.payload === payload &&
+        stored?.user === user.id &&
+        typeof stored.key === "string" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          stored.key,
+        )
+      )
         key = stored.key;
       sessionStorage.setItem(
         "deekub.checkout",
         JSON.stringify({ key, payload, user: user.id }),
       );
     } catch {
-      /* Idempotency still protects retries within this request. */
+      /* The ref preserves retries in this tab when storage is blocked. */
     }
+    checkoutRef.current = { key, payload, user: user.id };
     try {
       const order = await requestJSON<{ id: string }>("/api/shop/orders", {
         method: "POST",
@@ -61,6 +103,7 @@ export function CartPage() {
         body: payload,
       });
       clear();
+      checkoutRef.current = null;
       try {
         sessionStorage.removeItem("deekub.checkout");
       } catch {
@@ -215,7 +258,9 @@ export function CartPage() {
               )}
               <button
                 className="button"
-                disabled={busy || authLoading || Boolean(authError) || unavailable}
+                disabled={
+                  busy || authLoading || Boolean(authError) || unavailable
+                }
               >
                 {busy
                   ? "กำลังสร้างคำสั่งซื้อ…"

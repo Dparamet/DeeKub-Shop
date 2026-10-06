@@ -47,6 +47,27 @@ export function ProductDetail({ slug }: { slug: string }) {
         String(data.get(f.id) || "").trim(),
       ]),
     );
+    const existing = cart.find((i) => i.product_id === product.id);
+    if (
+      existing &&
+      Object.keys(fields).some(
+        (key) => (existing.account_fields[key] || "").trim() !== fields[key],
+      )
+    ) {
+      setError(
+        "สินค้านี้อยู่ในตะกร้าด้วยข้อมูลบัญชีอื่น กรุณาแก้ข้อมูลที่ตะกร้าหรือนำรายการเดิมออกก่อน",
+      );
+      return;
+    }
+    if (
+      (existing?.quantity || 0) + quantity >
+      Math.min(10, product.stock || 0)
+    ) {
+      setError(
+        "จำนวนรวมในตะกร้าเกินสต็อกหรือเกิน 10 ชิ้นต่อสินค้า กรุณาปรับจำนวนในตะกร้า",
+      );
+      return;
+    }
     add({ product_id: product.id, quantity, account_fields: fields });
     router.push("/cart");
   }
@@ -155,9 +176,12 @@ export function ProductDetail({ slug }: { slug: string }) {
                   </select>
                 </label>
                 {error && (
-                  <p className="form-error" role="alert">
+                  <div className="form-error" role="alert">
                     {error}
-                  </p>
+                    <Link className="text-button" href="/cart">
+                      เปิดตะกร้า
+                    </Link>
+                  </div>
                 )}
                 <button
                   className="button"

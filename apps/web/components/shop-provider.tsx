@@ -36,6 +36,34 @@ type ShopContext = {
 const Context = createContext<ShopContext | null>(null);
 const cartKey = "deekub.cart.v1";
 const savedKey = "deekub.saved.v1";
+const productID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function storedList(key: string): unknown[] {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+function isCartLine(value: unknown): value is CartLine {
+  if (!value || typeof value !== "object") return false;
+  const line = value as CartLine;
+  return (
+    typeof line.product_id === "string" &&
+    productID.test(line.product_id) &&
+    Number.isInteger(line.quantity) &&
+    line.quantity >= 1 &&
+    line.quantity <= 10 &&
+    Boolean(line.account_fields) &&
+    typeof line.account_fields === "object" &&
+    !Array.isArray(line.account_fields) &&
+    Object.keys(line.account_fields).length <= 6 &&
+    Object.values(line.account_fields).every(
+      (v) => typeof v === "string" && v.length <= 150,
+    )
+  );
+}
 
 export function ShopProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -46,32 +74,26 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(cartKey) || "[]");
-      const favorites = JSON.parse(localStorage.getItem(savedKey) || "[]");
-      if (Array.isArray(stored))
-        setCart(
-          stored
-            .filter(
-              (i) =>
-                i &&
-                typeof i.product_id === "string" &&
-                Number.isInteger(i.quantity) &&
-                i.quantity >= 1 &&
-                i.quantity <= 10 &&
-                i.account_fields &&
-                typeof i.account_fields === "object" &&
-                Object.values(i.account_fields).every(
-                  (v) => typeof v === "string",
-                ),
-            )
-            .slice(0, 20),
-        );
-      if (Array.isArray(favorites))
-        setSaved(favorites.filter((i) => typeof i === "string").slice(0, 500));
-    } catch {
-      /* Storage can be unavailable; shopping still works in this tab. */
-    }
+    const seen = new Set<string>();
+    setCart(
+      storedList(cartKey)
+        .filter(isCartLine)
+        .filter((line) => {
+          if (seen.has(line.product_id)) return false;
+          seen.add(line.product_id);
+          return true;
+        })
+        .slice(0, 20),
+    );
+    setSaved(
+      [
+        ...new Set(
+          storedList(savedKey).filter(
+            (id): id is string => typeof id === "string" && productID.test(id),
+          ),
+        ),
+      ].slice(0, 500),
+    );
     setHydrated(true);
     const controller = new AbortController();
     void fetch("/api/shop/me", { cache: "no-store", signal: controller.signal })
@@ -134,7 +156,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     },
     toggleSaved(id) {
       setSaved((items) =>
-        items.includes(id) ? items.filter((i) => i !== id) : [...items, id],
+        items.includes(id)
+          ? items.filter((i) => i !== id)
+          : [...items, id].slice(0, 500),
       );
     },
     async logout() {
