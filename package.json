@@ -9,10 +9,17 @@
     "apps/web"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace deekub-web",
-    "build": "npm run build --workspace deekub-web",
-    "start": "npm run start --workspace deekub-web",
+    "dev": "node scripts/run.mjs dev",
+    "dev:web": "node scripts/run.mjs dev:web",
+    "dev:api": "node scripts/run.mjs dev:api",
+    "db:migrate": "node scripts/run.mjs db:migrate",
+    "admin:grant": "node scripts/run.mjs admin:grant",
+    "build": "node scripts/run.mjs build",
+    "start": "node scripts/run.mjs start",
     "lint": "npm run lint --workspace deekub-web",
     "typecheck": "npm run typecheck --workspace deekub-web"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.5"
   }
 }

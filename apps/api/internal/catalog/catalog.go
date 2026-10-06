@@ -8,7 +8,7 @@ import (
 type ProductType string
 
 const (
-	ProductTypeTopUp  ProductType = "TOPUP"
+	ProductTypeTopUp   ProductType = "TOPUP"
 	ProductTypeGameKey ProductType = "GAME_KEY"
 )
 
@@ -33,6 +33,7 @@ type Product struct {
 	Region        string         `json:"region"`
 	Artwork       string         `json:"artwork"`
 	AccountFields []AccountField `json:"account_fields,omitempty"`
+	StockQuantity int            `json:"stock_quantity"`
 }
 
 type ListFilter struct {

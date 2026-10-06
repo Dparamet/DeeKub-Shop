@@ -30,6 +30,11 @@ func run() error {
 		return err
 	}
 	defer pool.Close()
+	backup, err := db.BackupApplication(ctx, pool)
+	if err != nil {
+		return err
+	}
+	slog.Info("application data snapshot saved", "path", backup)
 
 	if err := db.ApplyMigrations(ctx, pool); err != nil {
 		return err

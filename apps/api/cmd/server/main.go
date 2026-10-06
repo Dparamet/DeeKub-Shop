@@ -10,10 +10,12 @@ import (
 	"syscall"
 	"time"
 
+	"deekub-api/internal/auth"
 	"deekub-api/internal/catalog"
 	"deekub-api/internal/config"
 	"deekub-api/internal/db"
 	"deekub-api/internal/httpapi"
+	"deekub-api/internal/shop"
 )
 
 func main() {
@@ -35,9 +37,28 @@ func run() error {
 	}
 	defer pool.Close()
 
+	store := shop.New(pool, settings.MockEnabled)
+	signalCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for {
+			ctx, cancel := context.WithTimeout(signalCtx, 20*time.Second)
+			if err := store.ExpireOrders(ctx); err != nil && signalCtx.Err() == nil {
+				slog.Error("expire orders failed", "error", err)
+			}
+			cancel()
+			select {
+			case <-signalCtx.Done():
+				return
+			case <-ticker.C:
+			}
+		}
+	}()
 	server := &http.Server{
 		Addr:              ":" + settings.Port,
-		Handler:           httpapi.NewRouter(httpapi.Dependencies{Catalog: catalog.NewHandler(catalog.NewPostgresRepository(pool)), Database: pool}),
+		Handler:           httpapi.NewRouter(httpapi.Dependencies{Catalog: catalog.NewHandler(catalog.NewPostgresRepository(pool)), Database: pool, Auth: auth.New(pool, settings.SupabaseURL, settings.SupabaseKey), Shop: store}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -47,8 +68,6 @@ func run() error {
 		serverErrors <- server.ListenAndServe()
 	}()
 
-	signalCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 	select {
 	case err := <-serverErrors:
 		if errors.Is(err, http.ErrServerClosed) {

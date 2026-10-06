@@ -13,6 +13,8 @@ export type ApiCatalogProduct = {
   region: string;
   artwork: string;
   account_fields?: Product["fields"];
+  stock_quantity: number;
+  is_published?: boolean;
 };
 
 const artworkStyles = new Set<ArtworkStyle>([
@@ -28,7 +30,9 @@ export function toStorefrontProduct(product: ApiCatalogProduct): Product {
   const kind = product.type === "TOPUP" ? "topup" : "key";
   const artwork = artworkStyles.has(product.artwork as ArtworkStyle)
     ? (product.artwork as ArtworkStyle)
-    : kind === "topup" ? "valorant" : "hades";
+    : kind === "topup"
+      ? "valorant"
+      : "hades";
 
   return {
     id: product.id,
@@ -38,10 +42,14 @@ export function toStorefrontProduct(product: ApiCatalogProduct): Product {
     title: product.name,
     description: product.description,
     price: product.price_minor / 100,
+    stock: product.stock_quantity,
     currency: product.currency,
     platform: product.platform,
     region: product.region,
-    delivery: kind === "topup" ? "เติมตามขั้นตอนและตรวจสอบข้อมูลบัญชีเกม" : "Key จะแสดงเมื่อระบบสั่งซื้อพร้อมใช้งาน",
+    delivery:
+      kind === "topup"
+        ? "จำลองการเติมเกมหลังยืนยันคำสั่งซื้อ"
+        : "แสดง Key ตัวอย่างหลังชำระเงินจำลอง (ใช้จริงไม่ได้)",
     artwork,
     badge: kind === "topup" ? "เติมเกม" : "Game Key",
     fields: product.account_fields ?? [],

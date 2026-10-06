@@ -11,7 +11,7 @@ import (
 func OpenPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
-		return nil, fmt.Errorf("parse DATABASE_URL: %w", err)
+		return nil, fmt.Errorf("DATABASE_URL is invalid; copy the Session pooler URI and percent-encode the password")
 	}
 	config.MaxConns = 10
 

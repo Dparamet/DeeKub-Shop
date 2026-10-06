@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"deekub-api/internal/auth"
 	"deekub-api/internal/catalog"
+	"deekub-api/internal/shop"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +18,8 @@ type ReadinessChecker interface {
 type Dependencies struct {
 	Catalog  *catalog.Handler
 	Database ReadinessChecker
+	Auth     *auth.Service
+	Shop     *shop.Handler
 }
 
 func NewRouter(dependencies Dependencies) *gin.Engine {
@@ -42,6 +46,9 @@ func NewRouter(dependencies Dependencies) *gin.Engine {
 
 	if dependencies.Catalog != nil {
 		dependencies.Catalog.RegisterRoutes(router)
+	}
+	if dependencies.Auth != nil && dependencies.Shop != nil {
+		dependencies.Shop.RegisterRoutes(router, dependencies.Auth)
 	}
 	return router
 }

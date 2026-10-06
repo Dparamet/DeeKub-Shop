@@ -22,7 +22,7 @@ func (r *PostgresRepository) ListPublished(ctx context.Context, filter ListFilte
 	rows, err := r.pool.Query(ctx, `
 		SELECT id::text, slug, game_title, name, product_type, description,
 		       price_minor, currency, platform, region, COALESCE(metadata ->> 'artwork', ''),
-		       COALESCE(metadata -> 'account_fields', '[]'::jsonb)
+		       COALESCE(metadata -> 'account_fields', '[]'::jsonb), stock_quantity
 		FROM products
 		WHERE is_published = TRUE
 		  AND ($1::text = '' OR product_type = $1)
@@ -51,7 +51,7 @@ func (r *PostgresRepository) GetPublishedBySlug(ctx context.Context, slug string
 	row := r.pool.QueryRow(ctx, `
 		SELECT id::text, slug, game_title, name, product_type, description,
 		       price_minor, currency, platform, region, COALESCE(metadata ->> 'artwork', ''),
-		       COALESCE(metadata -> 'account_fields', '[]'::jsonb)
+		       COALESCE(metadata -> 'account_fields', '[]'::jsonb), stock_quantity
 		FROM products
 		WHERE slug = $1 AND is_published = TRUE`, slug)
 
@@ -85,6 +85,7 @@ func scanProduct(row rowScanner) (Product, error) {
 		&product.Region,
 		&product.Artwork,
 		&accountFields,
+		&product.StockQuantity,
 	)
 	if err != nil {
 		return Product{}, err

@@ -10,6 +10,9 @@ import (
 type Config struct {
 	Port        string
 	DatabaseURL string
+	SupabaseURL string
+	SupabaseKey string
+	MockEnabled bool
 }
 
 func Load() (Config, error) {
@@ -31,5 +34,20 @@ func FromLookup(lookup func(string) string) (Config, error) {
 		return Config{}, fmt.Errorf("DATABASE_URL is required")
 	}
 
-	return Config{Port: port, DatabaseURL: databaseURL}, nil
+	url := strings.TrimRight(strings.TrimSpace(lookup("NEXT_PUBLIC_SUPABASE_URL")), "/")
+	key := strings.TrimSpace(lookup("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"))
+	if url != "" && !strings.HasPrefix(url, "https://") {
+		return Config{}, fmt.Errorf("NEXT_PUBLIC_SUPABASE_URL must use HTTPS")
+	}
+	if strings.HasPrefix(key, "sb_secret_") {
+		return Config{}, fmt.Errorf("use a Supabase publishable key, never a secret key")
+	}
+	appEnv := strings.TrimSpace(lookup("APP_ENV"))
+	if appEnv == "" {
+		appEnv = "development"
+	}
+	if appEnv != "development" && appEnv != "production" {
+		return Config{}, fmt.Errorf("APP_ENV must be development or production")
+	}
+	return Config{Port: port, DatabaseURL: databaseURL, SupabaseURL: url, SupabaseKey: key, MockEnabled: appEnv == "development"}, nil
 }

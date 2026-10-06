@@ -1,34 +1,56 @@
-import { ArrowUpRight, Gamepad2, Zap } from "lucide-react";
-import type { Product } from "@/data/catalog";
-import { formatPrice } from "@/data/catalog";
+"use client";
+import Link from "next/link";
+import { Heart } from "lucide-react";
 import { GameArt } from "@/components/game-art";
+import { useShop } from "@/components/shop-provider";
+import { formatPrice, type Product } from "@/data/catalog";
 
-export function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: Product) => void }) {
-  const isTopup = product.kind === "topup";
-
+export function ProductCard({ product }: { product: Product }) {
+  const { saved, toggleSaved } = useShop();
   return (
-    <article className="product-card">
-      <button className="product-visual-button" onClick={() => onOpen(product)} aria-label={`ดูรายละเอียด ${product.title}`}>
-        <GameArt style={product.artwork} />
-        <span className={`product-badge${product.badge === "Game Key" ? " product-badge-key" : ""}`}>
-          {isTopup ? <Zap size={13} aria-hidden="true" /> : <Gamepad2 size={14} aria-hidden="true" />}
-          {product.badge ?? (isTopup ? "เติมเกม" : "Game Key")}
+    <article className="shop-product">
+      <div className="shop-product-art">
+        <Link
+          href={`/products/${product.slug}`}
+          aria-label={`ดู ${product.title}`}
+        >
+          <GameArt style={product.artwork} />
+        </Link>
+        <span className="shop-type">
+          {product.kind === "key" ? "Game Key" : "เติมเกม"}
         </span>
-        <span className="visual-open" aria-hidden="true"><ArrowUpRight size={15} /></span>
-      </button>
-      <div className="product-card-body">
-        <div className="product-game-label">{product.game}</div>
-        <h3>{product.title}</h3>
-        <p>{product.description}</p>
-        <div className="product-card-footer">
-          <div>
-            <span className="price-caption">ราคาเดโม</span>
-            <strong>{formatPrice(product.price, product.currency)}</strong>
-          </div>
-          <button className="icon-button product-open" onClick={() => onOpen(product)} aria-label={`เลือก ${product.title}`}>
-            <ArrowUpRight size={18} aria-hidden="true" />
-          </button>
+        <button
+          className="save-button"
+          aria-label={`บันทึก ${product.title}`}
+          aria-pressed={saved.includes(product.id)}
+          onClick={() => toggleSaved(product.id)}
+        >
+          <Heart
+            size={19}
+            fill={saved.includes(product.id) ? "currentColor" : "none"}
+          />
+        </button>
+      </div>
+      <div className="shop-product-body">
+        <p className="eyebrow">{product.game}</p>
+        <h3>
+          <Link href={`/products/${product.slug}`}>{product.title}</Link>
+        </h3>
+        <p className="muted">
+          {product.platform} · {product.region}
+        </p>
+        <div className="shop-product-bottom">
+          <strong>{formatPrice(product.price, product.currency)}</strong>
+          <span className={(product.stock ?? 0) > 0 ? "in-stock" : "muted"}>
+            {(product.stock ?? 0) > 0 ? "พร้อมสั่งซื้อ" : "หมดชั่วคราว"}
+          </span>
         </div>
+        <Link
+          className="button button-secondary"
+          href={`/products/${product.slug}`}
+        >
+          ดูรายละเอียด
+        </Link>
       </div>
     </article>
   );
