@@ -2,13 +2,15 @@
 
 ร้าน Digital Product สำหรับซื้อ Game Key และเติมเกมจากเว็บไซต์เดียว วางระบบให้แยกวิธีส่งมอบสินค้าแต่ละประเภท และให้ Admin ติดตามออเดอร์ผิดพลาดได้
 
-> **สถานะ:** Phase 1 กำลังพัฒนา — Go API มี `/health`, `/readyz`, public catalog API และ PostgreSQL migration/seed; Web Store และ catalog ใน `/admin` เชื่อม API แล้ว พร้อม demo fallback เมื่อ API ไม่พร้อม ส่วนออเดอร์และคลัง Key ใน Admin ยังเป็น demo ไม่มี Auth, CMS writes, checkout, การชำระเงินจริง หรือ provider จริง
+> **สถานะตอนนี้:** เว็บเรียก catalog ผ่าน Go API ที่อ่านจาก PostgreSQL ได้. Migration แรกสร้างตาราง `products` และเพิ่มสินค้า demo 6 รายการ. `/admin` ยังเป็น preview; login/roles, จัดการสินค้า, orders, checkout และ payment จริงยังไม่ทำ
 
 ## เป้าหมาย
 
 ส่งมอบ flow สำหรับร้านเกมที่ตรวจสอบได้ตั้งแต่เลือกสินค้า → สร้างออเดอร์ → จำลองการชำระเงิน → ส่ง Game Key หรือจำลองการเติมเกม → ติดตามสถานะและแก้ปัญหาจาก CMS
 
-## MVP Features
+## Planned MVP Features
+
+หัวข้อต่อไปนี้เป็นเป้าหมายของ MVP; ฟีเจอร์ที่ยังไม่อยู่ในสถานะด้านบนยังไม่ได้พัฒนา
 
 ### Customer Web
 
@@ -28,7 +30,7 @@
 - ปิดบัง Key ในตาราง; จำกัดการเปิดดูและบันทึก audit event
 - จัดการออเดอร์ที่ล้มเหลว, ผู้ใช้ และการจำลอง Provider
 
-## Product Flows
+## Planned Product Flows
 
 1. **Game Key:** ชำระเงินสำเร็จ → จองรหัสใน stock แบบ atomic → ให้เจ้าของออเดอร์เปิดดูรหัสได้
 2. **Top-up:** ชำระเงินสำเร็จ → สร้าง fulfillment job → Mock Provider จำลองสำเร็จ/ล้มเหลว/timeout → แสดง timeline ให้ลูกค้าและ Admin
@@ -41,13 +43,13 @@
 |---|---|
 | Web Store + CMS | Next.js, TypeScript, Tailwind CSS |
 | Backend API | Go, Gin, REST |
-| Database | PostgreSQL, pgx/database/sql, SQL migrations |
-| Authentication | Supabase Auth; Go API ตรวจ JWT, role และ ownership |
-| Hosting | Azure Container Apps + Azure Database for PostgreSQL |
+| Database | Supabase PostgreSQL, pgx, SQL migrations |
+| Authentication | Supabase Auth (planned; not implemented) |
+| Hosting | ยังไม่กำหนด |
 | Phase 2 Desktop | Tauri 2 (`.exe`) |
 | Phase 2 Mobile | React Native + Expo |
 
-Frontend ไม่มีสิทธิ์กำหนดราคา สถานะชำระเงิน หรือ role เอง; Go API ตรวจสิทธิ์และเป็นแหล่งความจริงของคำสั่งซื้อ
+เมื่อเพิ่ม order flow, Go API จะเป็นส่วนที่คำนวณราคาและตรวจสิทธิ์ ไม่ให้ frontend กำหนดยอดหรือ role เอง
 
 ## UI Direction
 
@@ -59,24 +61,60 @@ Frontend ไม่มีสิทธิ์กำหนดราคา สถา�
 
 ## Architecture & Roadmap
 
-- **Phase 1:** Next.js Web Store + CMS, Go API, PostgreSQL และ Azure staging
+- **Phase 1:** Next.js Web Store, Go API, Supabase PostgreSQL, Auth/roles และ order flow
 - **Phase 2:** Windows Desktop ด้วย Tauri และ Mobile ด้วย Expo โดยใช้ Go API เดิม
+- Production hosting ยังไม่กำหนด
 - แผนละเอียดและ acceptance criteria: [tasks/plan.md](tasks/plan.md), [tasks/todo.md](tasks/todo.md)
 
-## Run API Locally
+## Connect Supabase and Run Locally
 
-ต้องมี Go 1.25 ขึ้นไปและ Docker Desktop ที่เปิด Docker Engine แล้ว
+ต้องมี Go 1.25 ขึ้นไป, Node.js 20.9 ขึ้นไป, npm และ Supabase project
+
+### ตั้งค่า `.env`
+
+1. คัดลอก `.env.example` เป็น `.env` ที่โฟลเดอร์หลัก ซึ่งอยู่ระดับเดียวกับ `package.json`
+2. ใน Supabase กด **Connect → Session pooler** แล้วคัดลอก URI
+3. วาง URI หลัง `DATABASE_URL=` ใน `.env` และแทน `[YOUR-PASSWORD]` ด้วยรหัสผ่านฐานข้อมูล โดยไม่ใส่วงเล็บ
+
+```env
+DATABASE_URL=postgresql://postgres.<PROJECT_REF>:<PASSWORD>@<POOLER_HOST>:5432/postgres
+PORT=8080
+DEEKUB_API_URL=http://localhost:8080
+```
+
+ใช้ URI จาก Supabase ตามที่ให้มา อย่าประกอบ host หรือ username เอง. ถ้ารหัสผ่านมีอักขระพิเศษ ให้ percent-encode ก่อนใส่ใน URI. ห้ามส่ง `DATABASE_URL` หรือ commit ไฟล์ `.env`; `.gitignore` กันไฟล์นี้ไว้แล้ว
+
+`DATABASE_URL` ใช้กับ Go API เพื่อเชื่อม PostgreSQL. `anon public`/publishable key ไม่ใช้กับ migration นี้; Supabase Auth ยังไม่ได้เชื่อม
+
+### Terminal 1: migration และ Go API
+
+เปิด PowerShell ที่โฟลเดอร์หลักของ repository แล้วรัน:
 
 ```powershell
-docker compose up -d postgres
-
+$line = Get-Content .env | Where-Object { $_ -match '^DATABASE_URL=' } | Select-Object -First 1
+if (-not $line -or $line -eq 'DATABASE_URL=') { throw 'ใส่ DATABASE_URL ใน .env ก่อน' }
+$env:DATABASE_URL = $line.Substring('DATABASE_URL='.Length)
+$line = Get-Content .env | Where-Object { $_ -match '^PORT=' } | Select-Object -First 1
+if ($line) { $env:PORT = $line.Substring('PORT='.Length) }
 Set-Location apps/api
-$env:DATABASE_URL = "postgres://deekub:local-only-change-me@localhost:5432/deekub?sslmode=disable"
 go run ./cmd/migrate
 go run ./cmd/server
 ```
 
-`.env.example` ระบุค่า local development; Compose ใช้ค่าเริ่มต้นเดียวกันเมื่อยังไม่มี `.env` ไฟล์นี้ใช้เฉพาะเครื่อง local และห้ามนำรหัสผ่านตัวอย่างไป deploy
+ทำ migration ครั้งแรก หรือเมื่อมี migration ใหม่เท่านั้น. Migration แรกสร้างตารางและเพิ่มสินค้า demo 6 รายการ. รอข้อความ `database migrations applied` ก่อน; จากนั้น API จะทำงานใน terminal นี้
+
+### Terminal 2: เว็บ
+
+เปิด PowerShell อีกหน้าต่างที่โฟลเดอร์หลัก แล้วรัน:
+
+```powershell
+$line = Get-Content .env | Where-Object { $_ -match '^DEEKUB_API_URL=' } | Select-Object -First 1
+if ($line) { $env:DEEKUB_API_URL = $line.Substring('DEEKUB_API_URL='.Length) }
+npm install
+npm run dev
+```
+
+ใช้ `npm install` ครั้งแรกหรือเมื่อ dependencies เปลี่ยน. เปิด `http://localhost:3000` สำหรับหน้าร้าน และ `http://localhost:3000/admin` สำหรับ Admin preview
 
 API endpoints ปัจจุบัน:
 
@@ -100,20 +138,7 @@ go test ./...
 go vet ./...
 ```
 
-ข้อมูลสินค้าเริ่มต้นเป็น seed สำหรับ demo เท่านั้น; Web Store และ `/admin` อ่าน catalog ผ่าน `/api/catalog` ที่เชื่อม Go API ฝั่ง server
-
-## Run Web Locally
-
-ต้องมี Node.js 20.9 ขึ้นไป และ npm; ให้เริ่ม Go API และ PostgreSQL ก่อนถ้าต้องการใช้ catalog จากฐานข้อมูล
-
-```powershell
-Set-Location apps/web
-$env:DEEKUB_API_URL = "http://localhost:8080"
-npm.cmd ci
-npm.cmd run dev
-```
-
-เปิด `http://localhost:3000` สำหรับหน้าร้าน และ `http://localhost:3000/admin` สำหรับ Admin preview; เมนูหลักของร้านมีลิงก์ **Admin** ทั้ง desktop และ mobile. Storefront และ Admin อ่าน catalog ผ่าน Next.js route `/api/catalog` ซึ่งเชื่อม Go API ฝั่ง server ถ้า API ไม่พร้อมจะแสดง catalog demo พร้อมสถานะและปุ่มโหลดใหม่ ยังไม่มี login, checkout หรือการชำระเงินจริง
+Storefront และหน้า Catalog ใน `/admin` อ่านข้อมูลผ่าน Next.js route `/api/catalog` ไปยัง Go API. ถ้า API ไม่พร้อม เว็บจะแสดง catalog demo พร้อมสถานะและปุ่มโหลดใหม่
 
 ### Admin preview (`/admin`)
 
@@ -125,12 +150,12 @@ npm.cmd run dev
 
 `/admin` ยังเป็นหน้า preview ที่เปิดได้โดยไม่มี Auth ใช้เฉพาะ catalog สาธารณะและข้อมูลจำลอง ต้องเพิ่มการตรวจ ADMIN/SUPPORT ฝั่ง Go API ก่อนต่อข้อมูลหรือคำสั่งจัดการจริง การตั้ง `noindex` ไม่ใช่การควบคุมสิทธิ์
 
-ตรวจคุณภาพก่อนส่งงาน:
+ตรวจคุณภาพเมื่อต้องการ:
 
 ```powershell
-npm.cmd run lint
-npm.cmd run typecheck
-npm.cmd run build
+npm run lint
+npm run typecheck
+npm run build
 ```
 
 ## Safety and Supply Requirements
@@ -138,10 +163,10 @@ npm.cmd run build
 - Mock Payment/Mock Provider ใช้ใน local/demo เท่านั้น; ห้ามเปิดใช้กับ production
 - ก่อนขายจริง ต้องยืนยันผู้ให้บริการ Top-up และแหล่ง Game Key ที่ได้รับอนุญาต รวมถึงภูมิภาคและเงื่อนไขคืนเงิน
 - Steam Keys ต้องมีแหล่งจัดซื้อ/สิทธิ์จำหน่ายที่เหมาะสม; อย่าสมมติว่า Steam เป็น wholesaler สำหรับร้านทั่วไป
-- ตั้ง budget alert ก่อนสร้าง Azure resources; ตรวจค่า compute/storage และเครดิตคงเหลือ
+- ก่อนเปิด production ให้ตรวจค่าใช้จ่ายและตั้ง budget alert ของ hosting ที่เลือก
 
 ## Next Steps
 
 1. ทำ CMS catalog CRUD พร้อม Auth/roles และซิงก์การเผยแพร่สินค้า
 2. ทำ vertical slices: order → mock payment → fulfillment → CMS operations
-3. Deploy staging และผูกโดเมนเมื่อเลือก Azure resources, ตั้ง spending alert และมี remote พร้อม
+3. เตรียม staging หลังเลือก hosting และตั้ง budget alert
