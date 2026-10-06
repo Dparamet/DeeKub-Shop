@@ -21,19 +21,22 @@ type AccountField struct {
 }
 
 type Product struct {
-	ID            string         `json:"id"`
-	Slug          string         `json:"slug"`
-	GameTitle     string         `json:"game_title"`
-	Name          string         `json:"name"`
-	Type          ProductType    `json:"type"`
-	Description   string         `json:"description"`
-	PriceMinor    int64          `json:"price_minor"`
-	Currency      string         `json:"currency"`
-	Platform      string         `json:"platform"`
-	Region        string         `json:"region"`
-	Artwork       string         `json:"artwork"`
-	AccountFields []AccountField `json:"account_fields,omitempty"`
-	StockQuantity int            `json:"stock_quantity"`
+	ID              string         `json:"id"`
+	Slug            string         `json:"slug"`
+	GameTitle       string         `json:"game_title"`
+	Name            string         `json:"name"`
+	Type            ProductType    `json:"type"`
+	Description     string         `json:"description"`
+	PriceMinor      int64          `json:"price_minor"`
+	Currency        string         `json:"currency"`
+	Platform        string         `json:"platform"`
+	Region          string         `json:"region"`
+	Artwork         string         `json:"artwork"`
+	ImageURL        string         `json:"image_url,omitempty"`
+	SourceURL       string         `json:"source_url,omitempty"`
+	ActivationGuide string         `json:"activation_guide,omitempty"`
+	AccountFields   []AccountField `json:"account_fields,omitempty"`
+	StockQuantity   int            `json:"stock_quantity"`
 }
 
 type ListFilter struct {

@@ -165,6 +165,53 @@
   display: block;
   height: 100%;
 }
+.product-image {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: #101822;
+  overflow: hidden;
+}
+.game-cover {
+  object-fit: cover;
+}
+.game-cover-icon {
+  object-fit: contain;
+  padding: 18px;
+}
+.game-cover-banner {
+  object-fit: contain;
+}
+.image-fallback-note {
+  position: absolute;
+  bottom: 10px;
+  inset-inline: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #e1ebf3;
+}
+.art-title {
+  width: 85%;
+  font-size: clamp(20px, 2.4vw, 34px);
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+.activation-guide {
+  margin: 24px 0;
+  padding-block: 18px;
+  border-block: 1px solid #344153;
+}
+.activation-guide h2 {
+  font-size: 17px;
+}
+.activation-guide p,
+.detail-description {
+  white-space: pre-line;
+}
+.activation-guide p {
+  color: var(--muted);
+  font-size: 14px;
+}
 .shop-type {
   position: absolute;
   top: 12px;

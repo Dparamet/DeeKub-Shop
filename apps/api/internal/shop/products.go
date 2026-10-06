@@ -3,6 +3,7 @@ package shop
 import (
 	"encoding/json"
 	"errors"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -13,19 +14,22 @@ import (
 )
 
 type ProductInput struct {
-	Version       string                 `json:"version"`
-	Slug          string                 `json:"slug"`
-	GameTitle     string                 `json:"game_title"`
-	Name          string                 `json:"name"`
-	Type          string                 `json:"type"`
-	Description   string                 `json:"description"`
-	PriceMinor    int64                  `json:"price_minor"`
-	Platform      string                 `json:"platform"`
-	Region        string                 `json:"region"`
-	Artwork       string                 `json:"artwork"`
-	AccountFields []catalog.AccountField `json:"account_fields"`
-	StockQuantity int                    `json:"stock_quantity"`
-	IsPublished   bool                   `json:"is_published"`
+	Version         string                 `json:"version"`
+	Slug            string                 `json:"slug"`
+	GameTitle       string                 `json:"game_title"`
+	Name            string                 `json:"name"`
+	Type            string                 `json:"type"`
+	Description     string                 `json:"description"`
+	PriceMinor      int64                  `json:"price_minor"`
+	Platform        string                 `json:"platform"`
+	Region          string                 `json:"region"`
+	Artwork         string                 `json:"artwork"`
+	ImageURL        *string                `json:"image_url"`
+	SourceURL       *string                `json:"source_url"`
+	ActivationGuide *string                `json:"activation_guide"`
+	AccountFields   []catalog.AccountField `json:"account_fields"`
+	StockQuantity   int                    `json:"stock_quantity"`
+	IsPublished     bool                   `json:"is_published"`
 }
 
 var slugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
@@ -38,6 +42,9 @@ func (p *ProductInput) valid() bool {
 		return false
 	}
 	if p.Type != "TOPUP" && p.Type != "GAME_KEY" {
+		return false
+	}
+	if p.ImageURL != nil && !validProductURL(*p.ImageURL, true) || p.SourceURL != nil && !validProductURL(*p.SourceURL, false) || p.ActivationGuide != nil && len(*p.ActivationGuide) > 2000 {
 		return false
 	}
 	switch p.Artwork {
@@ -58,7 +65,37 @@ func (p *ProductInput) valid() bool {
 	return true
 }
 
-const productJSON = `to_jsonb(p) - 'metadata' - 'product_type' || jsonb_build_object('type',p.product_type,'artwork',COALESCE(p.metadata->>'artwork','hades'),'account_fields',COALESCE(p.metadata->'account_fields','[]'::jsonb))`
+func validProductURL(value string, image bool) bool {
+	if value == "" {
+		return true
+	}
+	u, err := url.Parse(value)
+	if err != nil || len(value) > 1500 || u.Scheme != "https" || u.User != nil || u.Port() != "" || u.Fragment != "" {
+		return false
+	}
+	if image {
+		switch u.Hostname() {
+		case "shared.akamai.steamstatic.com", "shared.fastly.steamstatic.com":
+			return strings.HasPrefix(u.Path, "/store_item_assets/steam/apps/")
+		case "play-lh.googleusercontent.com":
+			return u.Path != "/"
+		case "cms-media.roblox.com":
+			return strings.HasPrefix(u.Path, "/assets/")
+		case "cmsassets.rgpub.io":
+			return strings.HasPrefix(u.Path, "/sanity/images/")
+		case "www.pubgmobile.com":
+			return strings.HasPrefix(u.Path, "/images/")
+		}
+		return false
+	}
+	switch u.Hostname() {
+	case "store.steampowered.com", "play.google.com", "www.roblox.com", "en.help.roblox.com", "playvalorant.com", "ff.garena.com", "www.pubgmobile.com":
+		return true
+	}
+	return false
+}
+
+const productJSON = `to_jsonb(p) - 'metadata' - 'product_type' || jsonb_build_object('type',p.product_type,'artwork',COALESCE(p.metadata->>'artwork','hades'),'account_fields',COALESCE(p.metadata->'account_fields','[]'::jsonb),'image_url',COALESCE(p.metadata->>'image_url',''),'source_url',COALESCE(p.metadata->>'source_url',''),'activation_guide',COALESCE(p.metadata->>'activation_guide',''))`
 
 func (h *Handler) listProducts(c *gin.Context) {
 	rows, err := h.pool.Query(c.Request.Context(), `SELECT `+productJSON+` FROM products p ORDER BY sort_order,game_title,name LIMIT 500`)
@@ -101,7 +138,17 @@ func (h *Handler) saveProduct(c *gin.Context, update bool) {
 	if p.AccountFields == nil {
 		p.AccountFields = []catalog.AccountField{}
 	}
-	metadata, err := json.Marshal(map[string]any{"artwork": p.Artwork, "account_fields": p.AccountFields})
+	meta := map[string]any{"artwork": p.Artwork, "account_fields": p.AccountFields}
+	if p.ImageURL != nil {
+		meta["image_url"] = *p.ImageURL
+	}
+	if p.SourceURL != nil {
+		meta["source_url"] = *p.SourceURL
+	}
+	if p.ActivationGuide != nil {
+		meta["activation_guide"] = *p.ActivationGuide
+	}
+	metadata, err := json.Marshal(meta)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -115,7 +162,7 @@ func (h *Handler) saveProduct(c *gin.Context, update bool) {
 			fail(c, 400, "invalid_request")
 			return
 		}
-		err = h.pool.QueryRow(c.Request.Context(), `UPDATE products SET slug=$1,game_title=$2,name=$3,product_type=$4,description=$5,price_minor=$6,platform=$7,region=$8,is_published=$9,metadata=$10,stock_quantity=$11,updated_at=now() WHERE id=$12 AND updated_at=$13::timestamptz RETURNING id::text`, args...).Scan(&id)
+		err = h.pool.QueryRow(c.Request.Context(), `UPDATE products SET slug=$1,game_title=$2,name=$3,product_type=$4,description=$5,price_minor=$6,platform=$7,region=$8,is_published=$9,metadata=metadata || $10::jsonb,stock_quantity=$11,updated_at=now() WHERE id=$12 AND updated_at=$13::timestamptz RETURNING id::text`, args...).Scan(&id)
 		if errors.Is(err, pgx.ErrNoRows) {
 			fail(c, 409, "product_changed")
 			return

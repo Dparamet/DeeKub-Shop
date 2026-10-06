@@ -1,0 +1,107 @@
+-- Add demo packages and publisher artwork without replacing prices, stock or admin edits.
+WITH game_info(game_title, description, image_url, source_url, activation_guide, artwork, account_fields) AS (
+    VALUES
+    ('VALORANT', 'เกมยิงเชิงกลยุทธ์แบบทีมจาก Riot Games เลือก Agent ที่มีความสามารถต่างกันและร่วมวางแผนกับทีม แพ็ก VP ในร้านนี้เป็นรายการจำลองสำหรับทดลองสั่งซื้อ ไม่ได้เติมเข้าบัญชี Riot จริง',
+     'https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/1d1a219a5cb25d15b6e9fe2d4a4d2b83d41f0a8f-1920x1080.jpg?accountingTag=VAL',
+     'https://playvalorant.com/en-us/', 'ตรวจ Riot ID และ Tag ให้ครบ เลือกบัญชีและภูมิภาคให้ตรงกับสินค้า ระบบนี้จำลองผลเติมเท่านั้นและไม่ขอรหัสผ่าน Riot', 'valorant',
+     '[{"id":"riot-id","label":"Riot ID","placeholder":"ชื่อในเกม"},{"id":"riot-tag","label":"Tag","placeholder":"เช่น TH1"}]'::jsonb),
+    ('ROV', 'เกม MOBA จาก Garena สำหรับเล่นบนมือถือ ต่อสู้แบบทีมและเลือกฮีโร่ตามบทบาท แพ็ก Vouchers สำหรับทดลองขั้นตอนเติมและตรวจข้อมูลผู้เล่น ไม่ได้เพิ่ม Vouchers จริง',
+     'https://play-lh.googleusercontent.com/Uezg8ZC7krrxV1VfE03Mahzr174mlPoYQBraGypDXeGamJZszE0kZ_Jl0CtpwQELYWe9fw4M55Tqiucpm0tzi7E=s0-br30',
+     'https://play.google.com/store/apps/details?id=com.garena.game.kgth', 'เปิดโปรไฟล์เกมและตรวจ Player ID กับ Server ก่อนสั่งซื้อ แพ็กนี้ใช้กับ flow จำลองของร้าน ไม่ต้องส่งรหัสผ่าน Garena', 'arena',
+     '[{"id":"player-id","label":"Player ID","placeholder":"กรอก ID ผู้เล่น"},{"id":"server","label":"Server","placeholder":"กรอก Server ID"}]'::jsonb),
+    ('GENSHIN IMPACT', 'เกม Action RPG แบบโลกเปิดจาก HoYoverse สำรวจ Teyvat และจัดทีมตัวละครตามธาตุ มีตัวอย่างแพ็ก Welkin Moon และ Genesis Crystals ให้เลือกตามชื่อสินค้า ไม่มีการเติมหรือให้โบนัสจริง',
+     'https://play-lh.googleusercontent.com/PQEqjOxr-3uZaNHmWoQinLVQQ9fbSegMKXmqgFm5nGgagqC2REH-1er3BguYStWbH3YStijj5WH1DDlwPh2ehw=s0-br30',
+     'https://play.google.com/store/apps/details?id=com.miHoYo.GenshinImpact', 'ตรวจ UID และ Server ของตัวละคร เช่น Asia, America หรือ Europe ให้ตรงกัน ไม่ต้องส่งรหัสผ่าน HoYoverse และไม่มีการรับประกันโบนัสเติมครั้งแรกในรายการจำลอง', 'genshin',
+     '[{"id":"uid","label":"UID","placeholder":"กรอก UID ผู้เล่น"},{"id":"server","label":"Server / Region","placeholder":"เช่น Asia"}]'::jsonb),
+    ('ROBLOX', 'แพลตฟอร์มสำหรับเล่นและสร้างประสบการณ์ร่วมกับผู้เล่นอื่น Gift Card จริงใช้แลกรหัสผ่านเว็บไซต์ Roblox เพื่อรับเครดิตตามเงื่อนไขบัตร แล้วเลือกซื้อ Robux ได้ จำนวน Robux ไม่ได้ตายตัวตามราคาในร้านนี้ บัตรทั้งหมดที่นี่เป็นรายการจำลองและรหัสใช้จริงไม่ได้',
+     'https://cms-media.roblox.com/assets/1116e668-4e9a-4bea-bb9f-2fe24e35f0c9.webp',
+     'https://www.roblox.com/giftcardFAQs', 'สำหรับบัตรจริง: เข้าบัญชี Roblox ของคุณเองที่ roblox.com/redeem แล้วกรอกรหัสบัตร ตรวจมูลค่าเครดิตก่อนเลือกซื้อ Robux บัตรทั่วไปและบัตรแบบ Robux-only มีเงื่อนไขต่างกัน รหัส DEMO-NOT-VALID จากร้านนี้แลกไม่ได้ ไม่ต้องแจ้งชื่อผู้ใช้หรือรหัสผ่าน Roblox ให้ร้าน', 'valorant', '[]'::jsonb),
+    ('FREE FIRE', 'เกม Battle Royale บนมือถือจาก Garena รวมตัวเลือกแพ็ก Diamonds สำหรับทดลอง flow เติมเกม ใช้ Player UID เพื่อระบุบัญชี แพ็กและราคาบนร้านนี้เป็นตัวอย่าง ไม่มีการส่ง Diamonds จริง',
+     'https://play-lh.googleusercontent.com/cK-U0_B9GrnSy26SNISDuvU_hL4VggyqJ1J5V2oiuyVEfiGo7fzegdBjk0ejXPg3PKK5sPwumdLBbWv8KkBKLQ=s0-br30',
+     'https://play.google.com/store/apps/details?id=com.dts.freefireth', 'ดู Player UID จากหน้าโปรไฟล์ Free Fire แล้วตรวจตัวเลขก่อนสร้างคำสั่งซื้อ ไม่ใช้ชื่อที่แสดงแทน UID และไม่ต้องส่งรหัสผ่านหรือ OTP ของเกม', 'arena',
+     '[{"id":"uid","label":"Player UID","placeholder":"กรอก UID จากโปรไฟล์ Free Fire"}]'::jsonb),
+    ('PUBG MOBILE', 'เกม Battle Royale บนมือถือสำหรับเล่นเดี่ยวหรือร่วมทีม แพ็ก UC ใช้เป็นตัวอย่างสินค้าดิจิทัลสำหรับบัญชี PUBG MOBILE ไม่ใช่ PUBG: BATTLEGROUNDS บน Steam ไม่มีการเติม UC จริง',
+     'https://www.pubgmobile.com/images/event/home/share.jpg',
+     'https://www.pubgmobile.com/en-US/home.shtml', 'ตรวจ Character ID ของ PUBG MOBILE จากหน้าโปรไฟล์ แพ็กนี้ไม่ใช้กับ PUBG บน PC และไม่รับบัญชีเวอร์ชันอื่นผ่าน flow จำลอง ไม่ต้องส่งรหัสผ่านหรือรหัสยืนยันบัญชี', 'hades',
+     '[{"id":"character-id","label":"Character ID","placeholder":"กรอก Character ID ของ PUBG MOBILE"}]'::jsonb),
+    ('MOBILE LEGENDS', 'Mobile Legends: Bang Bang เป็นเกม MOBA บนมือถือแบบทีม มีแพ็ก Diamonds ตัวอย่างสำหรับทดลองสั่งซื้อและกรอก User ID กับ Zone ID ระบบนี้ไม่ส่ง Diamonds หรือสิทธิ์กิจกรรมจริง',
+     'https://play-lh.googleusercontent.com/MztmLpB1-_eFbHnqNzzvzl5zjiOH2BEb0D71uBxZYf_4BEmW3QEPWODhRtyqY7Qz4wRLwQ--Rg1RAjOFqtHSs-o=s0-br30',
+     'https://play.google.com/store/apps/details?id=com.mobile.legends', 'เปิดโปรไฟล์ Mobile Legends แล้วแยก User ID กับ Zone ID ให้ถูกช่อง ตรวจตัวเลขทั้งสองก่อนสั่งซื้อ ไม่ต้องส่งรหัสผ่านบัญชี Moonton', 'arena',
+     '[{"id":"user-id","label":"User ID","placeholder":"กรอก User ID"},{"id":"zone-id","label":"Zone ID","placeholder":"กรอกเลข Zone ในวงเล็บ"}]'::jsonb),
+    ('HONKAI: STAR RAIL', 'เกม RPG ต่อสู้แบบเทิร์นจาก HoYoverse ออกเดินทางไปกับ Astral Express มีตัวอย่างแพ็ก Express Supply Pass และ Oneiric Shards ตามชื่อสินค้า ไม่ได้มอบ Shards หรือรางวัลรายวันจริง',
+     'https://play-lh.googleusercontent.com/aWrGocSA7hEuk1qAPe7L4T57LvLKrwwH26cK2_LOqxRQMQX7j3uHYojC-EKWgYEV2PdrmE0ahqvvhLhXrAGk6Q=s0-br30',
+     'https://play.google.com/store/apps/details?id=com.HoYoverse.hkrpgoversea', 'ใช้ UID และ Server ของ Honkai: Star Rail ตรวจว่าไม่ใช่ UID ของ Genshin Impact หรือเกมอื่น แพ็ก Pass ในร้านนี้จำลองการสั่งซื้อเท่านั้นและไม่มีรางวัลจากการล็อกอินจริง', 'genshin',
+     '[{"id":"uid","label":"UID","placeholder":"กรอก UID ของ Star Rail"},{"id":"server","label":"Server / Region","placeholder":"เช่น Asia"}]'::jsonb),
+    ('ZENLESS ZONE ZERO', 'เกม Action RPG จาก HoYoverse ที่มีฉากเมือง New Eridu เลือกแพ็ก Inter-Knot Membership หรือ Monochromes ตัวอย่างเพื่อดู flow เติม ไม่ได้เพิ่ม Monochromes หรือสิทธิ์ Membership จริง',
+     'https://play-lh.googleusercontent.com/N8j-t_IXvDvqFzN3U_19OJPIyAHHgljwVa7TMyCYpdRXRykalU3HKq9u9oPnzDXEkUOX1yyuX16yuWNDrUC_Uw=s0-br30',
+     'https://play.google.com/store/apps/details?id=com.HoYoverse.Nap', 'ตรวจ UID และ Server ของ Zenless Zone Zero ก่อนสั่งซื้อ บัญชีเกมต้องตรงกับข้อมูลที่กรอก ไม่ต้องส่งรหัสผ่าน HoYoverse และไม่มีการให้สิทธิ์รายวันจริง', 'cyberpunk',
+     '[{"id":"uid","label":"UID","placeholder":"กรอก UID ของ Zenless Zone Zero"},{"id":"server","label":"Server / Region","placeholder":"เช่น Asia"}]'::jsonb),
+    ('HADES II', 'เกม Action Roguelike จาก Supergiant Games ต่อสู้ในโลกตำนานกรีกด้วยเวทมนตร์และพลังจากเทพ ตัวอย่างสินค้านี้เป็นเกม Hades II รุ่นหลักสำหรับ Steam ไม่ใช่เกม Hades ภาคแรกหรือ Soundtrack',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1145350/91ac334a2c137d08968ccc0bc474a02579602100/header.jpg?t=1779901265',
+     'https://store.steampowered.com/app/1145350/', 'สำหรับ Key จริง: ตรวจชื่อเกมและข้อจำกัดภูมิภาค แล้วเปิดใช้ในบัญชี Steam ของตนเอง รหัสที่ได้รับในโหมดจำลองขึ้นต้น DEMO-NOT-VALID และใช้เปิดเกมไม่ได้', 'hades', '[]'::jsonb),
+    ('STARDEW VALLEY', 'เกมทำฟาร์มและใช้ชีวิตจาก ConcernedApe ปลูกพืช เลี้ยงสัตว์ สำรวจเหมืองและทำความรู้จักชาวเมือง ตัวอย่าง Steam Key สำหรับเกมหลัก Stardew Valley ไม่ใช่บัญชี Steam ที่มีเกมอยู่แล้ว',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg?t=1786554168',
+     'https://store.steampowered.com/app/413150/', 'ตรวจระบบที่รองรับในหน้า Steam และภูมิภาคของ Key จริงก่อนเปิดใช้ Key ผูกกับบัญชีที่เปิดใช้แล้ว รหัสจากร้านนี้เป็นตัวอย่างและแลกไม่ได้', 'stardew', '[]'::jsonb),
+    ('CYBERPUNK 2077', 'เกม RPG ในเมือง Night City จาก CD PROJEKT RED รับบท V และเลือกแนวทางการเล่นของตนเอง รายการตัวอย่างนี้เป็นเกมหลัก Cyberpunk 2077 ไม่รวมส่วนเสริม Phantom Liberty',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/e9047d8ec47ae3d94bb8b464fb0fc9e9972b4ac7/header.jpg?t=1784714077',
+     'https://store.steampowered.com/app/1091500/', 'ตรวจสเปก PC จากหน้า Steam ก่อนซื้อเกมจริง รายการนี้เป็น Steam ไม่ใช่ GOG หรือคอนโซล Key จำลองใช้จริงไม่ได้ และภูมิภาค Global เป็นข้อมูลสำหรับทดลองร้าน', 'cyberpunk', '[]'::jsonb),
+    ('ELDEN RING', 'เกม Action RPG แบบโลกเปิดจาก FromSoftware สำรวจ Lands Between ต่อสู้กับบอสและปรับแต่งตัวละคร รายการตัวอย่างเป็นเกมหลัก ELDEN RING ไม่รวม Shadow of the Erdtree และไม่ใช่ ELDEN RING NIGHTREIGN',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/f0b19c231f86fa0e633ff88a1a63459443017728/header_alt_assets_3.jpg?t=1790290043',
+     'https://store.steampowered.com/app/1245620/', 'ตรวจชื่อ Edition สเปก PC และข้อจำกัดภูมิภาคจากผู้จำหน่าย Key จริงก่อนเปิดใช้ใน Steam รหัสที่แสดงหลังชำระเงินจำลองไม่สามารถเปิดเกมหรือ DLC ได้', 'hades', '[]'::jsonb),
+    ('TERRARIA', 'เกมผจญภัย Sandbox แบบ 2D จาก Re-Logic ขุดทรัพยากร สร้างสิ่งปลูกสร้าง สำรวจโลกและต่อสู้กับบอส ตัวอย่างสินค้าเป็น Terraria สำหรับ Steam หนึ่งสิทธิ์ ไม่ใช่ Four Pack',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/105600/header.jpg?t=1769844435',
+     'https://store.steampowered.com/app/105600/', 'ตรวจแพลตฟอร์ม Steam และภูมิภาคของ Key จริงก่อนเปิดใช้ รายการนี้ไม่ใช่ Terraria บนมือถือหรือคอนโซล รหัสตัวอย่างของร้านแลกไม่ได้', 'stardew', '[]'::jsonb),
+    ('PALWORLD', 'เกมเอาชีวิตรอดและสร้างสิ่งของจาก Pocketpair สำรวจโลก จับ Pals และร่วมกันทำงานหรือผจญภัยกับเพื่อน ตัวอย่างรายการสำหรับ Steam ไม่ใช่ Xbox หรือสิทธิ์ Game Pass',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1623730/6912f19c43a95ff5fe514eedd35e68bf12335459/header.jpg?t=1790336367',
+     'https://store.steampowered.com/app/1623730/', 'ตรวจสถานะเวอร์ชัน ระบบที่รองรับและสเปกจากหน้า Steam เพราะอาจเปลี่ยนตามการอัปเดต Key จำลองจากร้านนี้ใช้เปิดเกมไม่ได้', 'genshin', '[]'::jsonb),
+    ('HOGWARTS LEGACY', 'เกม Action RPG แบบโลกเปิดจาก Avalanche Software สำรวจโรงเรียน Hogwarts เรียนเวทมนตร์และผจญภัยในโลกพ่อมด ตัวอย่างสินค้าเป็น Standard Edition ของเกมหลัก ไม่รวมสิทธิ์ Deluxe',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/990080/be2971b1023bccb04f993887d70ef4d2060262cf/header.jpg?t=1790708992',
+     'https://store.steampowered.com/app/990080/', 'เลือกเวอร์ชัน Steam สำหรับ PC ตรวจ Edition สเปกและข้อจำกัดภูมิภาคก่อนซื้อ Key จริง รายการนี้ไม่ใช่เวอร์ชัน PlayStation, Xbox หรือ Nintendo Switch', 'hades', '[]'::jsonb),
+    ('HOLLOW KNIGHT', 'เกมผจญภัยและสำรวจแบบ 2D จาก Team Cherry เดินทางผ่านอาณาจักร Hallownest ต่อสู้และค้นหาเส้นทางใหม่ รายการนี้เป็น Hollow Knight ภาคแรก ไม่ใช่ Hollow Knight: Silksong',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/367520/3c3489495136b26b34f8a9543c7f5645b99d388c/header.jpg?t=1776125684',
+     'https://store.steampowered.com/app/367520/', 'ตรวจชื่อภาคให้ถูกต้องก่อนเลือกสินค้า Key จริงต้องเปิดใช้ในบัญชี Steam ของตนเอง รหัสจากโหมดจำลองไม่สามารถแลกสิทธิ์เกมได้', 'stardew', '[]'::jsonb),
+    ('RED DEAD REDEMPTION 2', 'เกมผจญภัยโลกเปิดจาก Rockstar Games ติดตาม Arthur Morgan และกลุ่ม Van der Linde ในยุคคาวบอย ตัวอย่างสินค้าเป็นเกมหลัก Red Dead Redemption 2 สำหรับ Steam ไม่ใช่ Red Dead Online แบบแยก',
+     'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1174180/header.jpg?t=1759502961',
+     'https://store.steampowered.com/app/1174180/', 'ตรวจสเปก PC และข้อกำหนดบัญชี Rockstar Games จากหน้าร้าน Steam ก่อนซื้อจริง ไม่ใช่ Rockstar Launcher Key ที่เปิดแยกจาก Steam รหัส DEMO-NOT-VALID แลกไม่ได้', 'cyberpunk', '[]'::jsonb)
+), updated_seed AS (
+    UPDATE products p SET
+        metadata = jsonb_build_object('image_url',g.image_url,'source_url',g.source_url,'activation_guide',g.activation_guide) || p.metadata,
+        description = CASE WHEN p.description IN (
+            'คะแนน VP สำหรับบัญชี Riot Games', 'แพ็กเกจเติมเกมสำหรับ Garena RoV',
+            'แพ็กเกจตัวอย่างสำหรับบัญชี HoYoverse', 'ตัวอย่างสินค้า Game Key สำหรับ Steam'
+        ) THEN g.description ELSE p.description END,
+        updated_at = now()
+    FROM game_info g
+    WHERE p.game_title=g.game_title AND p.slug IN ('valorant-475','rov-240','genshin-welkin','hades-ii-key','stardew-key','cyberpunk-key')
+    RETURNING p.id
+), packages(slug,game_title,name,product_type,price_minor,platform,region,sort_order) AS (
+    VALUES
+    ('roblox-gift-300','ROBLOX','Roblox Gift Card 300 THB','GAME_KEY',30000,'Roblox','Global',1),
+    ('roblox-gift-600','ROBLOX','Roblox Gift Card 600 THB','GAME_KEY',60000,'Roblox','Global',2),
+    ('roblox-gift-1000','ROBLOX','Roblox Gift Card 1,000 THB','GAME_KEY',100000,'Roblox','Global',3),
+    ('free-fire-100','FREE FIRE','100 Diamonds','TOPUP',3500,'Garena','Thailand',21),
+    ('free-fire-310','FREE FIRE','310 Diamonds','TOPUP',9900,'Garena','Thailand',22),
+    ('pubg-mobile-60','PUBG MOBILE','60 UC','TOPUP',3500,'PUBG MOBILE','Global',23),
+    ('pubg-mobile-325','PUBG MOBILE','325 UC','TOPUP',17900,'PUBG MOBILE','Global',24),
+    ('mlbb-86','MOBILE LEGENDS','86 Diamonds','TOPUP',5900,'Moonton','Global',25),
+    ('mlbb-172','MOBILE LEGENDS','172 Diamonds','TOPUP',11900,'Moonton','Global',26),
+    ('hsr-express-supply','HONKAI: STAR RAIL','Express Supply Pass','TOPUP',14900,'HoYoverse','เลือก Server ในฟอร์ม',31),
+    ('hsr-60-shards','HONKAI: STAR RAIL','60 Oneiric Shards','TOPUP',3500,'HoYoverse','เลือก Server ในฟอร์ม',32),
+    ('zzz-membership','ZENLESS ZONE ZERO','Inter-Knot Membership','TOPUP',14900,'HoYoverse','เลือก Server ในฟอร์ม',33),
+    ('zzz-60-monochromes','ZENLESS ZONE ZERO','60 Monochromes','TOPUP',3500,'HoYoverse','เลือก Server ในฟอร์ม',34),
+    ('genshin-60-crystals','GENSHIN IMPACT','60 Genesis Crystals','TOPUP',3500,'HoYoverse','เลือก Server ในฟอร์ม',35),
+    ('genshin-300-crystals','GENSHIN IMPACT','300 Genesis Crystals','TOPUP',17900,'HoYoverse','เลือก Server ในฟอร์ม',36),
+    ('rov-690','ROV','690 Vouchers','TOPUP',29900,'Garena','Thailand',27),
+    ('valorant-1000','VALORANT','1,000 VP','TOPUP',34900,'Riot Games','Asia Pacific',11),
+    ('elden-ring-key','ELDEN RING','ELDEN RING Standard Edition','GAME_KEY',179000,'Steam','Global',70),
+    ('terraria-key','TERRARIA','Terraria','GAME_KEY',21900,'Steam','Global',71),
+    ('palworld-key','PALWORLD','Palworld','GAME_KEY',59000,'Steam','Global',72),
+    ('hogwarts-legacy-key','HOGWARTS LEGACY','Hogwarts Legacy Standard Edition','GAME_KEY',99000,'Steam','Global',73),
+    ('hollow-knight-key','HOLLOW KNIGHT','Hollow Knight','GAME_KEY',29900,'Steam','Global',74),
+    ('red-dead-2-key','RED DEAD REDEMPTION 2','Red Dead Redemption 2','GAME_KEY',129000,'Steam','Global',75)
+)
+INSERT INTO products(slug,game_title,name,product_type,description,price_minor,platform,region,is_published,sort_order,metadata)
+SELECT p.slug,p.game_title,p.name,p.product_type,g.description,p.price_minor,p.platform,p.region,true,p.sort_order,
+       jsonb_build_object('artwork',g.artwork,'account_fields',g.account_fields,'image_url',g.image_url,'source_url',g.source_url,'activation_guide',g.activation_guide)
+FROM packages p JOIN game_info g USING(game_title)
+ON CONFLICT(slug) DO NOTHING;

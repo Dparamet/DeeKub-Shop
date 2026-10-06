@@ -19,6 +19,9 @@ const empty: Draft = {
   platform: "Steam",
   region: "Global",
   artwork: "hades",
+  image_url: "",
+  source_url: "",
+  activation_guide: "",
   stock_quantity: 0,
   is_published: false,
   account_fields: [],
@@ -184,7 +187,7 @@ function Editor({
               />
             </label>
             <label>
-              ภาพประกอบ
+              ภาพสำรองเมื่อไม่มีภาพเกม
               <select
                 value={draft.artwork}
                 onChange={(e) => field("artwork", e.target.value)}
@@ -202,6 +205,32 @@ function Editor({
               </select>
             </label>
           </div>
+          <div className="form-grid">
+            <label>
+              URL ภาพเกม (HTTPS)
+              <input
+                type="url"
+                maxLength={1500}
+                value={draft.image_url || ""}
+                onChange={(e) => field("image_url", e.target.value)}
+                placeholder="https://shared.akamai.steamstatic.com/..."
+              />
+            </label>
+            <label>
+              เว็บไซต์ข้อมูลเกมทางการ (HTTPS)
+              <input
+                type="url"
+                maxLength={1500}
+                value={draft.source_url || ""}
+                onChange={(e) => field("source_url", e.target.value)}
+                placeholder="https://store.steampowered.com/app/..."
+              />
+            </label>
+          </div>
+          <p className="muted small">
+            รองรับภาพจาก Steam, Google Play, Roblox, Riot และ PUBG MOBILE
+            และลิงก์ข้อมูลจากร้าน/เว็บไซต์เกมทางการ เว้นว่างเพื่อใช้ภาพสำรอง
+          </p>
           <label>
             รายละเอียด
             <textarea
@@ -283,6 +312,15 @@ function Editor({
               onChange={(e) => field("is_published", e.target.checked)}
             />
             เผยแพร่บนหน้าร้าน
+          </label>
+          <label>
+            วิธีใช้และข้อควรตรวจสอบ
+            <textarea
+              rows={3}
+              maxLength={2000}
+              value={draft.activation_guide || ""}
+              onChange={(e) => field("activation_guide", e.target.value)}
+            />
           </label>
           {error && (
             <p className="form-error" role="alert">

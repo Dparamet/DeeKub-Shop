@@ -9,13 +9,26 @@ const labels: Record<ArtworkStyle, string> = {
   cyberpunk: "2077",
 };
 
-export function GameArt({ style, compact = false }: { style: ArtworkStyle; compact?: boolean }) {
+export function GameArt({
+  style,
+  compact = false,
+  label,
+}: {
+  style: ArtworkStyle;
+  compact?: boolean;
+  label?: string;
+}) {
   return (
-    <div className={`game-art art-${style}${compact ? " game-art-compact" : ""}`} aria-hidden="true">
+    <div
+      className={`game-art art-${style}${compact ? " game-art-compact" : ""}`}
+      aria-hidden="true"
+    >
       <span className="art-light" />
       <span className="art-shape art-shape-one" />
       <span className="art-shape art-shape-two" />
-      <span className="art-mark">{labels[style]}</span>
+      <span className={`art-mark${label ? " art-title" : ""}`}>
+        {label || labels[style]}
+      </span>
       <span className="art-grain" />
     </div>
   );

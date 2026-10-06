@@ -12,7 +12,7 @@ export function ShopHeader() {
         ข้ามไปเนื้อหาหลัก
       </a>
       <div className="shop-notice">
-        ร้านทดลอง: ชำระเงินและส่งมอบแบบจำลอง ไม่มีการรับเงินจริง
+        ร้านทดลอง: ราคาตัวอย่าง ชำระเงินและส่งมอบแบบจำลอง ไม่มีการรับเงินจริง
       </div>
       <header className="shop-header">
         <Link className="brand" href="/">
@@ -21,7 +21,7 @@ export function ShopHeader() {
         <nav aria-label="เมนูหน้าร้าน" className="shop-nav">
           <Link href="/">สินค้าทั้งหมด</Link>
           <Link href="/?type=topup">เติมเกม</Link>
-          <Link href="/?type=key">Game Keys</Link>
+          <Link href="/?type=key">Game Keys / Gift Cards</Link>
         </nav>
         <div className="shop-header-actions">
           <Link

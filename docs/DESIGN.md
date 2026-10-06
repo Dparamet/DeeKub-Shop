@@ -4,7 +4,7 @@ Source: the user requested Loaded.com as a reference while retaining the existin
 
 - Keep the deeKub wordmark and its cyan accent on dark ink surfaces.
 - Loaded informs category navigation, visible platform/region data, filters, product browsing and cart flow. Do not copy branding or assert its fulfillment claims.
-- Use the existing six abstract product illustrations as placeholders, labeled as illustrative artwork. No new image assets or invented reviews.
+- Use publisher/store artwork for actual game recognition, with source links on product detail. Mobile app icons and Steam header art use contain to preserve logos and titles; publisher promotional scenes use cover. Existing abstract illustrations remain a clearly labeled fallback when remote images fail. No invented reviews.
 - The catalog is the main composition: compact introduction, browsing controls, then product grid. Product detail and checkout focus on purchase information.
 - Segoe UI and system fallbacks support Thai without requiring a font download.
 - ENERGY 2 / RHYTHM 2 / MOTION 1: distinct game art, strong price hierarchy, quiet forms and no decorative motion.

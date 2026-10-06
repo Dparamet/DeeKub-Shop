@@ -16,6 +16,9 @@ export type Product = {
   region: string;
   delivery: string;
   artwork: ArtworkStyle;
+  imageUrl?: string;
+  sourceUrl?: string;
+  activationGuide?: string;
   badge?: string;
   fields: ProductField[];
 };

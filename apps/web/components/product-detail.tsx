@@ -2,7 +2,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GameArt } from "@/components/game-art";
+import { ProductArt } from "@/components/product-art";
+import { productURL } from "@/lib/product-media";
 import { ShopHeader } from "@/components/shop-header";
 import { useShop } from "@/components/shop-provider";
 import { formatPrice, type Product } from "@/data/catalog";
@@ -79,14 +80,25 @@ export function ProductDetail({ slug }: { slug: string }) {
           <div className="product-detail">
             <div>
               <div className="detail-art">
-                <GameArt style={product.artwork} />
+                <ProductArt product={product} detail />
               </div>
-              <p className="muted small">ภาพประกอบสินค้า</p>
+              <p className="muted small">
+                ภาพเกมเพื่อระบุสินค้า · รายการและราคาในร้านเป็นตัวอย่าง
+              </p>
+              {productURL(product.sourceUrl) && (
+                <a
+                  className="back-link"
+                  href={productURL(product.sourceUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  ดูข้อมูลเกมและเงื่อนไขจากเว็บไซต์ทางการ
+                </a>
+              )}
             </div>
             <section>
               <p className="eyebrow">
-                {product.game} ·{" "}
-                {product.kind === "key" ? "Game Key" : "เติมเกม"}
+                {product.game} · {product.badge}
               </p>
               <h1>{product.title}</h1>
               <p className="detail-description">{product.description}</p>
@@ -108,6 +120,12 @@ export function ProductDetail({ slug }: { slug: string }) {
                 {formatPrice(product.price, product.currency)}
               </p>
               <p className="info-note">{product.delivery}</p>
+              {product.activationGuide && (
+                <section className="activation-guide">
+                  <h2>วิธีใช้และข้อควรตรวจสอบ</h2>
+                  <p>{product.activationGuide}</p>
+                </section>
+              )}
               <form className="shop-form" onSubmit={submit}>
                 {(product.fields || []).map((f) => (
                   <label key={f.id}>
@@ -149,7 +167,9 @@ export function ProductDetail({ slug }: { slug: string }) {
                 </button>
               </form>
               <p className="muted small">
-                กรอกเฉพาะ ID และเซิร์ฟเวอร์เกม ห้ามกรอกรหัสผ่านบัญชีเกม
+                {product.kind === "topup"
+                  ? "กรอกเฉพาะ ID และเซิร์ฟเวอร์เกม ห้ามกรอกรหัสผ่านบัญชีเกม"
+                  : "ไม่ต้องให้รหัสผ่านบัญชีเกมหรือ Steam แก่ร้าน"}
               </p>
             </section>
           </div>

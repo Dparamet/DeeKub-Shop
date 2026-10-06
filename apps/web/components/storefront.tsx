@@ -52,7 +52,7 @@ export function Storefront({ wishlist = false }: { wishlist?: boolean }) {
                 : type === "topup"
                   ? "เติมเกมที่คุณเล่น"
                   : type === "key"
-                    ? "Game Keys"
+                    ? "Game Keys / Gift Cards"
                     : "เลือกเกมถัดไปของคุณ"}
             </h1>
             <p className="muted">
@@ -62,7 +62,7 @@ export function Storefront({ wishlist = false }: { wishlist?: boolean }) {
             </p>
           </div>
           <p className="catalog-note">
-            ภาพสินค้าเป็นภาพประกอบ
+            ภาพเกมจากผู้พัฒนาและหน้าร้านทางการ
             <br />
             ส่งมอบแบบจำลองเท่านั้น
           </p>
@@ -141,8 +141,8 @@ export function Storefront({ wishlist = false }: { wishlist?: boolean }) {
             </div>
             {visible.length ? (
               <div className="shop-grid">
-                {visible.map((p) => (
-                  <ProductCard product={p} key={p.id} />
+                {visible.map((p, index) => (
+                  <ProductCard product={p} key={p.id} eager={index < 4} />
                 ))}
               </div>
             ) : (

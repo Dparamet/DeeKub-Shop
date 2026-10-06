@@ -12,6 +12,9 @@ export type ApiCatalogProduct = {
   platform: string;
   region: string;
   artwork: string;
+  image_url?: string;
+  source_url?: string;
+  activation_guide?: string;
   account_fields?: Product["fields"];
   stock_quantity: number;
   is_published?: boolean;
@@ -51,7 +54,15 @@ export function toStorefrontProduct(product: ApiCatalogProduct): Product {
         ? "จำลองการเติมเกมหลังยืนยันคำสั่งซื้อ"
         : "แสดง Key ตัวอย่างหลังชำระเงินจำลอง (ใช้จริงไม่ได้)",
     artwork,
-    badge: kind === "topup" ? "เติมเกม" : "Game Key",
+    imageUrl: product.image_url,
+    sourceUrl: product.source_url,
+    activationGuide: product.activation_guide,
+    badge:
+      kind === "topup"
+        ? "เติมเกม"
+        : product.platform === "Roblox"
+          ? "Gift Card"
+          : "Game Key",
     fields: product.account_fields ?? [],
   };
 }

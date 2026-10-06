@@ -1,11 +1,17 @@
 "use client";
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { GameArt } from "@/components/game-art";
+import { ProductArt } from "@/components/product-art";
 import { useShop } from "@/components/shop-provider";
 import { formatPrice, type Product } from "@/data/catalog";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  eager = false,
+}: {
+  product: Product;
+  eager?: boolean;
+}) {
   const { saved, toggleSaved } = useShop();
   return (
     <article className="shop-product">
@@ -14,11 +20,9 @@ export function ProductCard({ product }: { product: Product }) {
           href={`/products/${product.slug}`}
           aria-label={`ดู ${product.title}`}
         >
-          <GameArt style={product.artwork} />
+          <ProductArt product={product} eager={eager} />
         </Link>
-        <span className="shop-type">
-          {product.kind === "key" ? "Game Key" : "เติมเกม"}
-        </span>
+        <span className="shop-type">{product.badge}</span>
         <button
           className="save-button"
           aria-label={`บันทึก ${product.title}`}
